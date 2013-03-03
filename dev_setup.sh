@@ -6,14 +6,19 @@ if [[($1 = "") || ($2 = "")]]; then
 fi
 
 # Install git
+
+git_version=1.8.1.4
 cd $HOME
-wget http://git-core.googlecode.com/files/git-1.8.1.4.tar.gz 
-tar xvzf git-1.8.1.4.tar.gz 
-cd git-1.8.1.4 
+wget http://git-core.googlecode.com/files/git-$git_version.tar.gz 
+tar xvzf git-$git_version.tar.gz 
+cd git-$git_version
 ./configure --prefix=$HOME/git 
 make 
 make install 
 export PATH=$PATH:$HOME/git/bin
+cd $HOME
+rm -rf git-$git_version
+rm git-$git_version.tar.gz
 
 # Configure git user name and email
 git config --global user.name=$1
