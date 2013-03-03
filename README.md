@@ -8,9 +8,11 @@ Usage
 1. **dev_setup.sh**: Script for setting up the development environment.
 
     *Requires*: 
+
     1. `chmod 744` to add execute permission. 
     2. `PATH` to be updated to include `usr/sbin:/sbin:$HOME/git/bin`. This can
         changed by modifying $HOME/.bash_profile
+
 
     *Description*:
 
