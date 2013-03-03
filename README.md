@@ -3,11 +3,12 @@ MicroCloud
 
 CSC-591-004 MicroCloud Project Repository
 
- 1. **dev_setup.sh**: Script for setting up the development environment.
+1. **dev_setup.sh**: Script for setting up the development environment.
 
     *Requires*: Run `chmod 744` to add execute permission. 
 
     *Description*:
+
     a. Download and install [git][1] ([version 1.8.1.4][2]) locally in 
             $HOME/git
     b. Setup git [user name][3]/[email][4] (passed as argument)
