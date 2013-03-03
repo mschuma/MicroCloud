@@ -3,9 +3,11 @@ MicroCloud
 
 CSC-591-004 MicroCloud Project Repository
 
+Usage
+-----
 1. **dev_setup.sh**: Script for setting up the development environment.
 
-    *Requires*: Run `chmod 744` to add execute permission. 
+    *Requires*: `chmod 744` to add execute permission. 
 
     *Description*:
 
