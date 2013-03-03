@@ -6,6 +6,9 @@ import tarfile
 import os
 from subprocess import call
 from os.path import expanduser
+from tempfile import mkstemp
+from shutil import move
+from os import remove, close
 
 def read_file(filepath):
     dictionary = dict()
@@ -59,11 +62,11 @@ def install_apr_util(apr_util_path, apr_path):
     # TODO: Is there a better way to denote the arguments, 
     #       rather than string concat?
     prefix = "--prefix=" + libpath
-    with_apr = "--with-apr=" + apr_path
+    with_apr = "--with-apr=" + home + "/lib/apr" 
     arguments=[]
     arguments.append(prefix)
     arguments.append(with_apr)
-    configure_make_install(apr_path, arguments)
+    configure_make_install(apr_util_path, arguments)
 
 def install_pcre(pcre_path):
     print "Installing pcre"
@@ -77,11 +80,12 @@ def install_pcre(pcre_path):
 def install_httpd(httpd_path, apr_path, apr_util_path, pcre_path):
     print "Installing httpd"
     home = expanduser("~")
+    # TODO: Remove hard coded path
     libpath = home+"/apache"
     prefix = "--prefix="+libpath
-    with_apr = "--with-apr=" + apr_path
-    with_apr_util = "--with-apr-util=" + apr_util_path
-    with_pcre = "--with-pcre=" + pcre_path
+    with_apr = "--with-apr=" + home + "/lib/apr"
+    with_apr_util = "--with-apr-util=" + home + "/lib/apr-util"
+    with_pcre = "--with-pcre=" + home + "/lib/pcre"
     arguments=[]
     arguments.append(prefix)
     arguments.append(with_apr)
@@ -92,8 +96,9 @@ def install_httpd(httpd_path, apr_path, apr_util_path, pcre_path):
 def configure_make_install(source_path, configure_arguments):
     saved_path = os.getcwd()
     os.chdir(source_path);
-    
-    call(configure_arguments.insert(0, "./configure")
+
+    configure_arguments.insert(0, "./configure")
+    call(configure_arguments)
     call("make")
     call(["make", "install"])
 
@@ -108,19 +113,44 @@ def get_folder_path(modules_dict, module_name):
 def install_modules(config_filepath):
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
-    download_modules(modules_dict)
-    extract_modules(modules_dict)
+    #download_modules(modules_dict)
+    #extract_modules(modules_dict)
 
     apr_path = get_folder_path(modules_dict, "apr")
     install_apr(apr_path)
 
-    apr_util_path = get_folder_path("apr-util")
-    install_apr_util(apr_util_path)
+    apr_util_path = get_folder_path(modules_dict, "apr-util")
+    install_apr_util(apr_util_path, apr_path)
 
-    pcre_path = get_folder_path("pcre")
+    pcre_path = get_folder_path(modules_dict, "pcre")
     install_pcre(pcre_path)
     
-    httpd_path = get_folder_path("httpd")
-    install_httpd(httpd_path)
+    httpd_path = get_folder_path(modules_dict, "httpd")
+    install_httpd(httpd_path, apr_path, apr_util_path, pcre_path)
 
+def update_listen_port(old_port, new_port, apache_install_path):
+    conf_filepath = apache_install_path + "/conf/httpd.conf"
+    # TODO: Fails when called twice, look for end of line in seach sequence
+    pattern="Listen "+old_port
+    subst="Listen "+new_port
+    fh, abs_path = mkstemp()
+    new_file = open(abs_path,'w')
+    old_file = open(conf_filepath)
+    for line in old_file:
+        new_file.write(line.replace(pattern, subst))
+    new_file.close()
+    close(fh)    
+    old_file.close()
+
+    remove(conf_filepath)
+    move(abs_path, conf_filepath) 
+
+def start_apache(apache_install_path):
+    apachectl_path = apache_install_path + "/bin/apachectl"
+    call([apachectl_path, "-k", "restart"])
+
+home = expanduser("~")
+apache_install_path=home+"/apache"
 install_modules("download_config")
+update_listen_port("80", "8080", apache_install_path)
+start_apache(apache_install_path)
