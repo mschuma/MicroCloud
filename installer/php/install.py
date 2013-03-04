@@ -80,11 +80,7 @@ def configure(apache_install_path):
     # Copy php.ini-development to  $HOME/php/lib/php.ini
     template_ini_file = "php.ini-development"     
     shutil.copy(template_ini_file, install_path+"/lib/php.ini")
-
     update_httpd_conf(apache_install_path)
-    
-    create_test_php(apache_install_path)
-
     restart_apache(apache_install_path)
 
 def create_test_php(apache_install_path)
@@ -103,7 +99,24 @@ def update_httpd_conf(apache_install_path)
     f.write("DirectoryIndex index.php" + os.linesep)
     f.close()
 
+def cleanup(existing_files):
+    folder=os.getcwd()
+    for entry in os.listdir(folder):
+        if entry in existing_files:
+            continue            
+        path = os.path.join(folder,entry)        
+        if os.path.isfile(path):
+            os.unlink(path)
+            print "Deleted "+path
+        elif os.path.isdir(path):
+            print "Deleted "+path
+            shutil.rmtree(path)
+
 home = expanduser("~")
+existing_files=os.listdir(os.getcwd())
 mysql_install_path = home + "/mysql"
 apache_install_path = home + "/apache"
 install_modules("download_config", mysql_install_path, apache_install_path)
+create_test_php(apache_install_path)
+#restart_apache(apache_install_path)
+cleanup(existing_files)
