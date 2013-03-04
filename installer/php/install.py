@@ -45,13 +45,33 @@ def extract_modules(modules_dict):
 
     print "Completed extracting modules\n"
 
-def install_modules(config_filepath):
+def install_modules(config_filepath, mysql_install_path, apache_install_path):
     # TODO: Move common methods to utility library
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
     download_modules(modules_dict)
     extract_modules(modules_dict)
 
-install_modules("pre_requisites")
-install_modules("main")
-install_modules("post_main")
+    php_path = get_folder_path(modules_dict, "php")
+    install_php(php_path, mysql_install_path, apache_install_path)
+
+def install_php(php_path, mysql_install_path, apache_install_path):
+    print "Installing php"
+    home = expanduser("~")
+    # TODO: Remove hard coded path
+    libpath = home+"/php"
+    prefix = "--prefix="+libpath
+    with_apxs2="--with-apxs2="+apache_install_path"/bin/apxs"
+    with_mysql="--with-mysql="+mysql_install_path
+    with_mysql_sock="--with-mysql-sock="+mysql_install_path+"/tmp/mysql.sock"
+    arguments=[]
+    arguments.append(prefix)
+    arguments.append(with_apxs2)
+    arguments.append(with_mysql)
+    arguments.append(with_mysql_sock)
+    configure_make_install(php_path, arguments)
+
+home = expanduser("~")
+mysql_install_path = home + "/mysql"
+apache_install_path = home + "/apache"
+install_modules("download_config", mysql_install_path, apache_install_path)
