@@ -54,7 +54,7 @@ def install_modules(config_filepath, mysql_install_path, apache_install_path):
 
     php_path = get_folder_path(modules_dict, "php")
     install_php(php_path, mysql_install_path, apache_install_path)
-    configure(apache_install_path)
+    configure(php_path, apache_install_path)
 
 def install_php(php_path, mysql_install_path, apache_install_path):
     print "Installing php"
@@ -62,7 +62,7 @@ def install_php(php_path, mysql_install_path, apache_install_path):
     # TODO: Remove hard coded path
     libpath = home+"/php"
     prefix = "--prefix="+libpath
-    with_apxs2="--with-apxs2="+apache_install_path"/bin/apxs"
+    with_apxs2="--with-apxs2="+apache_install_path+"/bin/apxs"
     with_mysql="--with-mysql="+mysql_install_path
     with_mysql_sock="--with-mysql-sock="+mysql_install_path+"/tmp/mysql.sock"
     arguments=[]
@@ -72,18 +72,40 @@ def install_php(php_path, mysql_install_path, apache_install_path):
     arguments.append(with_mysql_sock)
     configure_make_install(php_path, arguments)
 
-def configure(apache_install_path):
+def configure_make_install(source_path, configure_arguments):
+    saved_path = os.getcwd()
+    os.chdir(source_path);
+
+    configure_arguments.insert(0, "./configure")
+    call(configure_arguments)
+    call("make")
+    call(["make", "install"])
+
+    os.chdir(saved_path)
+
+def get_folder_path(modules_dict, module_name):
+    ext = ".tar.gz"
+    filename = modules_dict[module_name].split('/')[-1]
+    if filename.endswith(ext):
+        return filename[:-len(ext)]
+
+def configure(source_path, apache_install_path):
     home = expanduser("~")
     # TODO: Remove hard coded path
     install_path = home+"/php"
- 
+
+    saved_path = os.getcwd()
+    os.chdir(source_path);
+
     # Copy php.ini-development to  $HOME/php/lib/php.ini
     template_ini_file = "php.ini-development"     
     shutil.copy(template_ini_file, install_path+"/lib/php.ini")
-    update_httpd_conf(apache_install_path)
-    restart_apache(apache_install_path)
+    
+    os.chdir(saved_path)
 
-def create_test_php(apache_install_path)
+    update_httpd_conf(apache_install_path)
+
+def create_test_php(apache_install_path):
     f = open(apache_install_path + "/htdocs/test.php", "w")
     f.write("<?php phpinfo(); ?>")
     f.close()
@@ -92,7 +114,7 @@ def restart_apache(apache_install_path):
     apachectl_path = apache_install_path + "/bin/apachectl"
     call([apachectl_path, "-k", "restart"])
 
-def update_httpd_conf(apache_install_path)
+def update_httpd_conf(apache_install_path):
     f = open(apache_install_path + "/conf/httpd.conf", "a")
     f.write("AddHandler php5-script .php" + os.linesep)
     f.write("AddType text/html .php" + os.linesep)
@@ -118,5 +140,5 @@ mysql_install_path = home + "/mysql"
 apache_install_path = home + "/apache"
 install_modules("download_config", mysql_install_path, apache_install_path)
 create_test_php(apache_install_path)
-#restart_apache(apache_install_path)
+restart_apache(apache_install_path)
 cleanup(existing_files)
