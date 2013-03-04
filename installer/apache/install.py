@@ -8,6 +8,7 @@ from subprocess import call
 from os.path import expanduser
 from tempfile import mkstemp
 from shutil import move
+import shutil
 from os import remove, close
 
 def read_file(filepath):
@@ -113,8 +114,8 @@ def get_folder_path(modules_dict, module_name):
 def install_modules(config_filepath):
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
-    #download_modules(modules_dict)
-    #extract_modules(modules_dict)
+    download_modules(modules_dict)
+    extract_modules(modules_dict)
 
     apr_path = get_folder_path(modules_dict, "apr")
     install_apr(apr_path)
@@ -149,8 +150,23 @@ def start_apache(apache_install_path):
     apachectl_path = apache_install_path + "/bin/apachectl"
     call([apachectl_path, "-k", "restart"])
 
+def cleanup(existing_files):
+    folder=os.getcwd()
+    for entry in os.listdir(folder):
+        if entry in existing_files:
+            continue            
+        path = os.path.join(folder,entry)        
+        if os.path.isfile(path):
+            os.unlink(path)
+            print "Deleted "+path
+        elif os.path.isdir(path):
+            print "Deleted "+path
+            shutil.rmtree(path)
+
 home = expanduser("~")
+existing_files=os.listdir(os.getcwd())
 apache_install_path=home+"/apache"
 install_modules("download_config")
 update_listen_port("80", "8080", apache_install_path)
 start_apache(apache_install_path)
+cleanup(existing_files)
