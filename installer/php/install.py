@@ -54,6 +54,7 @@ def install_modules(config_filepath, mysql_install_path, apache_install_path):
 
     php_path = get_folder_path(modules_dict, "php")
     install_php(php_path, mysql_install_path, apache_install_path)
+    configure(apache_install_path)
 
 def install_php(php_path, mysql_install_path, apache_install_path):
     print "Installing php"
@@ -70,6 +71,24 @@ def install_php(php_path, mysql_install_path, apache_install_path):
     arguments.append(with_mysql)
     arguments.append(with_mysql_sock)
     configure_make_install(php_path, arguments)
+
+def configure(apache_install_path):
+    home = expanduser("~")
+    # TODO: Remove hard coded path
+    install_path = home+"/php"
+ 
+    # Copy php.ini-development to  $HOME/php/lib/php.ini
+    template_ini_file = "php.ini-development"     
+    shutil.copy(template_ini_file, install_path+"/lib/php.ini")
+
+    update_httpd_conf(apache_install_path)
+
+def update_httpd_conf(apache_install_path)
+    f = open(apache_install_path + "/conf/httpd.conf", "a")
+    f.write("AddHandler php5-script .php" + os.linesep)
+    f.write("AddType text/html .php" + os.linesep)
+    f.write("DirectoryIndex index.php" + os.linesep)
+    f.close()
 
 home = expanduser("~")
 mysql_install_path = home + "/mysql"
