@@ -82,6 +82,22 @@ def install_modules(config_filepath):
     extract_modules(modules_dict)
     configure_make_install_modules(modules_dict)
 
+def cleanup(existing_files):
+    folder=os.getcwd()
+    for entry in os.listdir(folder):
+        if entry in existing_files:
+            continue            
+        path = os.path.join(folder,entry)        
+        if os.path.isfile(path):
+            os.unlink(path)
+            print "Deleted "+path
+        elif os.path.isdir(path):
+            print "Deleted "+path
+            shutil.rmtree(path)
+
+home = expanduser("~")
+existing_files=os.listdir(os.getcwd())
 install_modules("pre_requisites")
 install_modules("main")
 install_modules("post_main")
+cleanup(existing_files)
