@@ -82,10 +82,15 @@ def configure(apache_install_path):
     shutil.copy(template_ini_file, install_path+"/lib/php.ini")
 
     update_httpd_conf(apache_install_path)
-    # Create test.php
     
-    # Restart apache
+    create_test_php(apache_install_path)
+
     restart_apache(apache_install_path)
+
+def create_test_php(apache_install_path)
+    f = open(apache_install_path + "/htdocs/test.php", "w")
+    f.write("<?php phpinfo(); ?>")
+    f.close()
 
 def restart_apache(apache_install_path):
     apachectl_path = apache_install_path + "/bin/apachectl"
