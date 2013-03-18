@@ -12,6 +12,7 @@ import shutil
 from os import remove, close
 import md5
 import MySQLdb as db
+import sys
 
 def read_file(filepath):
     dictionary = dict()
@@ -87,9 +88,9 @@ def install_modules(config_filepath):
     extract_modules(modules_dict)
     
     vcl_path = get_folder_path(modules_dict, "vcl")
-    install_vcl(vcl_path)
+    install_mysql(vcl_path)
 
-def install_vcl(vcl_path):
+def install_mysql(vcl_path):
     # Install mysql
     # TODO: Check if mysql is installed before installing
     call(["yum", "install", "mysql-server", "-y"])
@@ -98,19 +99,55 @@ def install_vcl(vcl_path):
     call(["/sbin/chkconfig", "--level", "345", "mysqld", "on"])
     call(["/sbin/service", "mysqld", "start"])
 
-    configure_mysql()
+    configure_mysql("vcluser", "vcluserpassword")
 
-def configure_mysql():
+def configure_mysql(vcl_username, vcl_password):
     try:
         conn = db.connect()
+        
+        # Check whether vcl database exist
+        conn.query("SHOW DATABASES WHERE `Database` = 'vcl'")
+        results = conn.store_result()
 
+        if results.num_rows() > 0:
+            print "vcl database exists. Aborting..."
+            conn.close()
+            return
+
+        cursor = conn.cursor()
+        cursor.execute("CREATE DATABASE vcl;\
+                        GRANT SELECT,INSERT,UPDATE,DELETE,CREATE TEMPORARY \
+                        TABLES ON vcl.* TO '%s'@'localhost' IDENTIFIED \
+                        BY '%s'" % (vcl_username, vcl_password))
+        cursor.close()
         conn.close()
     except db.Error, e:
         print "MySQL error %d: %s" % (e.args[0],e.args[1])
         sys.exit(1)
 
-def update_firewall_rules(webserver_ip_address, webserver_port, 
-                            management_node_ip_address, management_node_port):
+    # Import the sql dump
+    call(["mysql", "vcl"], stdin=open("apache-VCL-2.3.1/mysql/vcl.sql"))
+
+def update_webserver_firewall_rules():
+    conf_filepath = "/etc/sysconfig/iptables"
+
+    # TODO: Is there a better way to install the iptables rules, rather than
+    #       appending them to the end of the file (for example, check if the 
+    #       rule exists before adding
+    conf_file = open(conf_filepath, 'a')
+    conf_file.write("-A RH-Firewall-1-INPUT -m state --state NEW -p tcp \
+                        --dport 80 -j ACCEPT")
+    conf_file.write("-A RH-Firewall-1-INPUT -m state --state NEW -p tcp \
+                        --dport 443 -j ACCEPT")
+    
+    conf_file.close()
+    call(["service", "iptables", "restart"])
+
+
+def update_mysql_firewall_rules(webserver_ip_address, 
+                                webserver_port, 
+                                management_node_ip_address, 
+                                management_node_port):
     conf_filepath = "/etc/sysconfig/iptables"
 
     # TODO: Is there a better way to install the iptables rules, rather than
