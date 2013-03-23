@@ -9,9 +9,9 @@ Usage
 
    + *Requires*: 
     1. `chmod 744` to add execute permission. 
-    2. `PATH` to be updated to include `usr/sbin:/sbin:$HOME/git/bin`. This can
+    2. `PATH` to be updated to include `/usr/sbin:/sbin:$HOME/git/bin`. This can
         changed by modifying $HOME/.bash_profile
-
+   
    + *Description*:
     1. Download and install [git][1] ([version 1.8.1.4][2]) locally in $HOME/git            
     2. Setup git [user name][3]/[email][4] (passed as argument)
@@ -23,6 +23,8 @@ Usage
    + *Usage*:      `dev_setup.sh <git user.name> <git user.email>`
 
    + *Example*:    `./dev_setup.sh "foo" "foo@bar.com"`
+   
+   + *Download script*: `wget https://raw.github.com/mschuma/MicroCloud/installer/dev_setup.sh`
 
  [1]: http://code.google.com/p/git-core/downloads/list
  [2]: http://git-core.googlecode.com/files/git-1.8.1.4.tar.gz
