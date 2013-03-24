@@ -83,7 +83,7 @@ def generate_random_text():
 def install_modules(config_filepath):
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
-    #download_modules(modules_dict)
+    download_modules(modules_dict)
 
     tar_file_path = get_file_name(modules_dict, "vcl")
     md5_file_path = get_file_name(modules_dict, "vcl-md5")
@@ -92,10 +92,10 @@ def install_modules(config_filepath):
     if md5_verified == False:
         return
 
-    #extract_modules(modules_dict)
+    extract_modules(modules_dict)
     
     vcl_path = get_folder_path(modules_dict, "vcl")
-    #install_vcl(vcl_path)
+    install_vcl(vcl_path)
     # TODO: Retreive the public IP address of the current machine (VM or 
     #       otherwise)
     # TODO: Move value to configuration file or prompt user for input  
@@ -110,10 +110,10 @@ def install_modules(config_filepath):
                         ("https://%s/vcl/index.php?mode=xmlrpccall" % 
                         parameters["server_ip_address"])
 
-    #install_webserver(parameters["database_name"], parameters["hostname"], 
-    #                    parameters["database_user"],
-    #                    parameters["database_password"], 
-    #                    parameters["server_ip_address"])
+    install_webserver(parameters["database_name"], parameters["hostname"], 
+                        parameters["database_user"],
+                        parameters["database_password"], 
+                        parameters["server_ip_address"])
 
     install_management_node_components(parameters["hostname"], 
                         parameters["server_ip_address"],
@@ -172,8 +172,6 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     for line in temp_file:
         secrets_file.write(line)
 
-    #remove("secrets.php")
-    #move(abs_path, "secrets.php")
     secrets_file.close()
 
     call("./genkeys.sh")
@@ -207,9 +205,6 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
         conf_file.write(line)
 
     conf_file.close()
-    
-    #remove("conf.php")
-    #move(abs_path, "conf.php")    
     
     # TODO: Update the help and error email ids in conf.php
 
@@ -412,25 +407,35 @@ def add_management_node(database_ip_address, hostname):
 def install_management_node_components(hostname, database_ip_address, 
                                     database_user, database_password,
                                     xmlrpc_password, xmlrpc_url):
-    #shutil.copytree("apache-VCL-2.3.1/managementnode/", "/usr/local/vcl")
-    #call(["perl", "/usr/local/vcl/bin/install_perl_libs.pl"])
+    shutil.copytree("apache-VCL-2.3.1/managementnode/", "/usr/local/vcl")
+    call(["perl", "/usr/local/vcl/bin/install_perl_libs.pl"])
     if not os.path.exists("/etc/vcl"):
         os.mkdir("/etc/vcl")
-    shutil.copy("/usr/local/vcl/etc/vcl/vcld.conf", "/etc/vcl")
+    shutil.copy("/usr/local/vcl/etc/vcl/vcld.conf", "/etc/vcl/vcld.conf")
 
     # Install and start the vcld service
-    #shutil.copy("/usr/local/vcl/bin/S99vcld.linux", "/etc/init.d/vcld")
-    #call(["/sbin/chkconfig", "--add", "vcld"])
-    #call(["/sbin/chkconfig", "--level", "345", "vcld", "on"])
-    #call(["/sbin/service", "vcld", "start"])
+    shutil.copy("/usr/local/vcl/bin/S99vcld.linux", "/etc/init.d/vcld")
+    call(["/sbin/chkconfig", "--add", "vcld"])
+    call(["/sbin/chkconfig", "--level", "345", "vcld", "on"])
+    call(["/sbin/service", "vcld", "start"])
 
-    #call(["/usr/local/vcl/bin/vcld", "-setup"])
 
-    # TODO: Retreive the public IP address of the current machine (VM or 
-    #       otherwise)
+    update_ssh_conf()
     update_vcld_conf(hostname, database_ip_address, database_user, 
                         database_password, xmlrpc_password, xmlrpc_url)
+
+    # Set the vclsystem account password for xmlrpc api
+    call(["/usr/local/vcl/bin/vcld", "-setup"])
                        
+def update_ssh_conf():
+    conf_filepath = "/etc/ssh/ssh_config"
+    
+    # TODO: Check whether the entries exist before appending (for each host)
+    file = open(conf_filepath, 'a')
+    file.write("    UserKnownHostsFile /dev/null\n")
+    file.write("    StrictHostKeyChecking no\n")
+    file.close()
+
 def update_vcld_conf(hostname, database_ip_address, database_user, 
                         database_password, xmlrpc_password, xmlrpc_url):
     
