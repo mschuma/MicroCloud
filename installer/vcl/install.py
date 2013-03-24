@@ -49,7 +49,7 @@ def verify_md5(tar_filepath, md5_filepath):
     
 def extract_modules(modules_dict):
     print "Extracting modules"
-    ext = ".tar.gz"
+    ext = ".tar.bz2"
     for (module_name, url) in modules_dict.iteritems():
 	    # TODO: Can use key/value pair in the config file
         # TODO: Check if the file exists 
@@ -58,15 +58,16 @@ def extract_modules(modules_dict):
             continue
 
         print "[%s] from %s ..." % (module_name, filename)
-        tar = tarfile.open(filename)
-        tar.extractall()
+        tar = tarfile.open(filename, "r:bz2")
+        for member in tar.getmembers():
+            tar.extract(member, "")
         tar.close()
-        folder_name = filename.strip(".tar.gz")
+        folder_name = filename.strip(".tar.bz2")
 
     print "Completed extracting modules\n"
 
 def get_folder_path(modules_dict, module_name):
-    ext = ".tar.gz"
+    ext = ".tar.bz2"
     filename = modules_dict[module_name].split('/')[-1]
     if filename.endswith(ext):
         return filename[:-len(ext)]
@@ -91,14 +92,14 @@ def install_modules(config_filepath):
     if md5_verified == False:
         return
 
-    extract_modules(modules_dict)
+    #extract_modules(modules_dict)
     
     vcl_path = get_folder_path(modules_dict, "vcl")
     #install_vcl(vcl_path)
     # TODO: Retreive the public IP address of the current machine (VM or 
     #       otherwise)
     install_webserver("vcl","localhost","vcluser", "vcluserpassword", 
-                        "152.7.98.119")
+                        "192.168.187.145")
 
 def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password, 
                         webserver_ip_address):
@@ -142,13 +143,21 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     temp_file.close()
     close(fh)
 
-    remove("secrets.php")
-    move(abs_path, "secrets.php")
+    # Copy from the temp file to secrets.php (so as not to loose the 
+    # file permissions on secrets.php
+    secrets_file = open("secrets.php", 'w')
+    temp_file = open(abs_path, 'r')
+
+    for line in temp_file:
+        secrets_file.write(line)
+
+    #remove("secrets.php")
+    #move(abs_path, "secrets.php")
+    secrets_file.close()
 
     call("./genkeys.sh")
     shutil.copy("conf-default.php", "conf.php")
-    
-    # Update the IP address in conf.php
+        # Update the IP address in conf.php
     fh, abs_path = mkstemp()
 
     old_file = open("conf.php", 'r')
@@ -168,8 +177,18 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     temp_file.close()
     close(fh)
 
-    remove("conf.php")
-    move(abs_path, "conf.php")
+    # Copy from the temp file to secrets.php (so as not to loose the 
+    # file permissions on secrets.php
+    conf_file = open("conf.php", 'w')
+    temp_file = open(abs_path, 'r')
+
+    for line in temp_file:
+        conf_file.write(line)
+
+    conf_file.close()
+    
+    #remove("conf.php")
+    #move(abs_path, "conf.php")    
     
     # TODO: Update the help and error email ids in conf.php
 
@@ -216,6 +235,7 @@ def configure_mysql(vcl_username, vcl_password):
     call(["mysql", "vcl"], stdin=open("apache-VCL-2.3.1/mysql/vcl.sql"))
 
 def update_webserver_firewall_rules():
+
     conf_filepath = "/etc/sysconfig/iptables"
 
     # TODO: Is there a better way to install the iptables rules, rather than
