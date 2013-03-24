@@ -83,7 +83,7 @@ def generate_random_text():
 def install_modules(config_filepath):
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
-    download_modules(modules_dict)
+    #download_modules(modules_dict)
 
     tar_file_path = get_file_name(modules_dict, "vcl")
     md5_file_path = get_file_name(modules_dict, "vcl-md5")
@@ -92,14 +92,35 @@ def install_modules(config_filepath):
     if md5_verified == False:
         return
 
-    extract_modules(modules_dict)
+    #extract_modules(modules_dict)
     
     vcl_path = get_folder_path(modules_dict, "vcl")
-    install_vcl(vcl_path)
+    #install_vcl(vcl_path)
     # TODO: Retreive the public IP address of the current machine (VM or 
     #       otherwise)
-    install_webserver("vcl","localhost","vcluser", "vcluserpassword", 
-                        "192.168.187.145")
+    # TODO: Move value to configuration file or prompt user for input  
+    parameters = dict()
+    parameters["database_name"] = "vcl"
+    parameters["database_user"] = "vcluser"
+    parameters["database_password"] = "vcluserpassword"
+    parameters["hostname"] = "localhost"
+    parameters["server_ip_address"] = "192.168.187.145"
+    parameters["xmlrpc_password"] = "password"
+    parameters["xmlrpc_url"] = \
+                        ("https://%s/vcl/index.php?mode=xmlrpccall" % 
+                        parameters["server_ip_address"])
+
+    #install_webserver(parameters["database_name"], parameters["hostname"], 
+    #                    parameters["database_user"],
+    #                    parameters["database_password"], 
+    #                    parameters["server_ip_address"])
+
+    install_management_node_components(parameters["hostname"], 
+                        parameters["server_ip_address"],
+                        parameters["database_user"],
+                        parameters["database_password"],
+                        parameters["xmlrpc_password"],
+                        parameters["xmlrpc_url"])
 
 def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password, 
                         webserver_ip_address):
@@ -157,7 +178,7 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
 
     call("./genkeys.sh")
     shutil.copy("conf-default.php", "conf.php")
-        # Update the IP address in conf.php
+    # Update the IP address in conf.php
     fh, abs_path = mkstemp()
 
     old_file = open("conf.php", 'r')
@@ -194,11 +215,11 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
 
     call(["chown", "apache", "maintenance"])
     
-    add_management_node()
+    add_management_node(webserver_ip_address, vclhost)
 
     os.chdir(saved_path)
 
-def add_management_node():
+def add_management_node(database_ip_address, hostname):
     stateid = None
     ownerid = None
     premoduleid = None
@@ -234,9 +255,9 @@ def add_management_node():
 
     # TODO: Check if parameterized insert statements are possible
     parameters = dict()
-    parameters["hostname"] = "localhost"
+    parameters["hostname"] = hostname
     # TODO: Retreive machine's private IP address
-    parameters["IPaddress"] = "192.168.187.145"
+    parameters["IPaddress"] = database_ip_address
     parameters["ownerid"] = ownerid 
     parameters["stateid"] = stateid
     parameters["checkininterval"] = 5 # 5 secs
@@ -387,6 +408,74 @@ def add_management_node():
     except db.Error, e:
         print "MySQL error %d: %s" % (e.args[0],e.args[1])
         sys.exit(1)
+
+def install_management_node_components(hostname, database_ip_address, 
+                                    database_user, database_password,
+                                    xmlrpc_password, xmlrpc_url):
+    #shutil.copytree("apache-VCL-2.3.1/managementnode/", "/usr/local/vcl")
+    #call(["perl", "/usr/local/vcl/bin/install_perl_libs.pl"])
+    if not os.path.exists("/etc/vcl"):
+        os.mkdir("/etc/vcl")
+    shutil.copy("/usr/local/vcl/etc/vcl/vcld.conf", "/etc/vcl")
+
+    # Install and start the vcld service
+    #shutil.copy("/usr/local/vcl/bin/S99vcld.linux", "/etc/init.d/vcld")
+    #call(["/sbin/chkconfig", "--add", "vcld"])
+    #call(["/sbin/chkconfig", "--level", "345", "vcld", "on"])
+    #call(["/sbin/service", "vcld", "start"])
+
+    #call(["/usr/local/vcl/bin/vcld", "-setup"])
+
+    # TODO: Retreive the public IP address of the current machine (VM or 
+    #       otherwise)
+    update_vcld_conf(hostname, database_ip_address, database_user, 
+                        database_password, xmlrpc_password, xmlrpc_url)
+                       
+def update_vcld_conf(hostname, database_ip_address, database_user, 
+                        database_password, xmlrpc_password, xmlrpc_url):
+    
+    parameters = dict()
+    parameters["FQDN"] = hostname
+    parameters["server"] = database_ip_address
+    parameters["LockerWrtUser"] = database_user
+    parameters["wrtPass"] = database_password
+    parameters["xmlrpc_pass"] = xmlrpc_password
+    parameters["xmlrpc_url"] = xmlrpc_url 
+
+    conf_filepath = "/etc/vcl/vcld.conf"
+
+    fh, abs_path = mkstemp()
+
+    old_file = open(conf_filepath, 'r')
+    temp_file = open(abs_path, 'w')
+
+    for line in old_file:
+        words = line.split('=')
+        if len(words) <= 1:
+            temp_file.write(line)
+            continue
+        
+        key, value = line.split('=')
+        if key.strip() not in parameters:
+            temp_file.write(line)
+            continue
+
+        value = parameters[key.strip()]
+        temp_file.write("%s=%s\n" % (key.strip(), value))
+    
+    old_file.close()
+    temp_file.close()
+    close(fh)
+
+    # Copy from the temp file to secrets.php (so as not to loose the 
+    # file permissions on secrets.php
+    conf_file = open(conf_filepath, 'w')
+    temp_file = open(abs_path, 'r')
+
+    for line in temp_file:
+        conf_file.write(line)
+
+    conf_file.close() 
 
 def install_vcl(vcl_path):
     # Install mysql
