@@ -83,7 +83,7 @@ def generate_random_text():
 def install_modules(config_filepath):
     # TODO: Add unit tests
     modules_dict = read_file(config_filepath)
-    #download_modules(modules_dict)
+    download_modules(modules_dict)
 
     tar_file_path = get_file_name(modules_dict, "vcl")
     md5_file_path = get_file_name(modules_dict, "vcl-md5")
@@ -92,10 +92,10 @@ def install_modules(config_filepath):
     if md5_verified == False:
         return
 
-    #extract_modules(modules_dict)
+    extract_modules(modules_dict)
     
     vcl_path = get_folder_path(modules_dict, "vcl")
-    #install_vcl(vcl_path)
+    install_vcl(vcl_path)
     # TODO: Retreive the public IP address of the current machine (VM or 
     #       otherwise)
     install_webserver("vcl","localhost","vcluser", "vcluserpassword", 
@@ -194,7 +194,199 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
 
     call(["chown", "apache", "maintenance"])
     
+    add_management_node()
+
     os.chdir(saved_path)
+
+def add_management_node():
+    stateid = None
+    ownerid = None
+    premoduleid = None
+    try:
+        conn = db.connect(db = "vcl")
+        cursor = conn.cursor(db.cursors.DictCursor)
+        cursor.execute("SELECT id FROM state WHERE name='available'")
+        row = cursor.fetchone()
+        if row is not None:
+            stateid = row['id']
+
+        # TODO: Do not hard code user's unity id
+        cursor.execute("SELECT id FROM user WHERE unityid='admin'")
+        row = cursor.fetchone()
+        if row is not None:
+            ownerid = row['id']
+
+        # TODO: Do not hard code predictive module name
+        cursor.execute("SELECT id FROM module WHERE name='predictive_level_0'")
+        row = cursor.fetchone()
+        if row is not None:
+            premoduleid = row['id']
+
+        cursor.close()
+        conn.close()
+    except db.Error, e:
+        print "MySQL error %d: %s" % (e.args[0],e.args[1])
+        sys.exit(1)
+
+    if (stateid is None) or (ownerid is None):
+        print "Cannot retrieve stateid or owner id from the vcl database"
+        sys.exit(1)
+
+    # TODO: Check if parameterized insert statements are possible
+    parameters = dict()
+    parameters["hostname"] = "localhost"
+    # TODO: Retreive machine's private IP address
+    parameters["IPaddress"] = "192.168.187.145"
+    parameters["ownerid"] = ownerid 
+    parameters["stateid"] = stateid
+    parameters["checkininterval"] = 5 # 5 secs
+    parameters["installpath"] = ""
+    parameters["imagelibenable"] = 0 
+    parameters["imagelibgroupid"] = None
+    parameters["imagelibuser"] = None
+    parameters["imagelibkey"] = None
+    parameters["keys"] = "/etc/vcl/vcl.key"
+    parameters["premoduleid"] = premoduleid 
+    parameters["sshport"] = 22
+    parameters["publicIPconfig"] = "dynamicDHCP"
+    parameters["publicnetmask"] = None
+    parameters["publicgateway"] = None
+    parameters["publicdnsserver"] = None
+    parameters["sysadminemail"] = None
+    parameters["sharedmailbox"] = None
+
+    # TODO: Include conditional strings, include when not None
+    query = ("INSERT INTO managementnode " 
+                "(hostname, " 
+                "IPaddress, " 
+                "ownerid, " 
+                "stateid, "  
+                "checkininterval, "  
+                "installpath, " 
+                "imagelibenable, " 
+                "imagelibgroupid, " 
+                "imagelibuser, " 
+                "imagelibkey, " 
+                "`keys`, " 
+                "predictivemoduleid, " 
+                "sshport, " 
+                "publicIPconfiguration, " 
+                "publicSubnetMask, " 
+                "publicDefaultGateway, " 
+                "publicDNSserver, " 
+                "sysadminEmailAddress, " 
+                "sharedMailBox" 
+                ")"
+            " VALUES ('%s', "    # hostname
+                "'%s', "        # IPaddress
+                "%d, "          # ownerid
+                "%d, "          # stateid
+                "%d, "        # checkininterval                       
+                "'%s', "          # installpath
+                "%d,"          # imagelibenable
+                #("NULL,", "%d,")[parameters["imagelibgroupid"] is not None]# imagelibgroupid
+                "NULL,"
+                "NULL,"          # imagelibuser
+                "NULL,"          # imagelibkey
+                "'%s', "          # keys        
+                "%d, "          # premoduleid
+                "%d, "        # sshport
+                "'%s',"          # publicIPconfig
+                "NULL,"          # publicnetmask
+                "NULL,"          # publicgateway
+                "NULL,"          # publicdnsserver
+                "NULL,"          # sysminemail
+                "NULL"            # sharedmailbox
+                ")" %        
+            (parameters["hostname"],
+             parameters["IPaddress"], 
+             parameters["ownerid"],
+             parameters["stateid"], 
+             parameters["checkininterval"],
+             parameters["installpath"], 
+             parameters["imagelibenable"], 
+             #parameters["imagelibgroupid"],
+             #parameters["imagelibuser"], 
+             #parameters["imagelibkey"], 
+             parameters["keys"], 
+             parameters["premoduleid"], 
+             parameters["sshport"], 
+             parameters["publicIPconfig"], 
+             #parameters["publicnetmask"], 
+             #parameters["publicgateway"], 
+             #parameters["publicdnsserver"],
+             #parameters["sysadminemail"],
+             #parameters["sharedmailbox"]
+             ))
+
+    print query
+
+    try:
+        conn = db.connect(db = "vcl")
+        cursor = conn.cursor(db.cursors.DictCursor)
+
+        # Insert into managementnode table
+        cursor.execute(query)
+
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        row = cursor.fetchone() 
+        if row is None:
+            print "Unable to insert management node in the table"
+            cursor.close()
+            conn.close()
+            sys.exit(1)
+
+        lastInsertId = row["LAST_INSERT_ID()"]
+
+        cursor.execute("SELECT id FROM resourcetype "
+                                    "WHERE name='managementnode'")
+        row = cursor.fetchone()
+        managementnode_typeid = row['id']
+
+        # Insert into resource table
+        resource_query = ("INSERT INTO resource " 
+                            "(resourcetypeid, subid) " 
+                            "VALUES (%d, %d)" %
+                            (managementnode_typeid, lastInsertId))
+
+        print resource_query
+        cursor.execute(resource_query)
+
+        conn.commit()
+        
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        row = cursor.fetchone()
+        if row is None:
+            print "Unable to update the resource table"
+            cursor.close()
+            conn.close()
+            sys.exit()
+
+        resourceId = row["LAST_INSERT_ID()"]
+        resourceGroupQuery = ("SELECT id FROM resourcegroup WHERE "
+                                "name='%s'" % "allManagementNodes")
+        cursor.execute(resourceGroupQuery)
+        row = cursor.fetchone()
+        if row is None:
+            print """Unable to retrieve the resource group id of 
+                    allManagementNodes group"""
+            cursor.close()
+            conn.close()
+            sys.exit()
+
+        resourceGroupId = row["id"]
+        cursor.execute("INSERT INTO resourcegroupmembers"
+                        "(resourceid, resourcegroupid) "
+                        "VALUES(%d,%d)" %
+                        (resourceId, resourceGroupId))
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+    except db.Error, e:
+        print "MySQL error %d: %s" % (e.args[0],e.args[1])
+        sys.exit(1)
 
 def install_vcl(vcl_path):
     # Install mysql
