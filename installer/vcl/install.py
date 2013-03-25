@@ -19,16 +19,16 @@ import netifaces as ni
 import socket, struct
 
 def read_file(filepath):
-    dictionary = dict()
+    modules = dict()
     for line in open(filepath):
         key, value = line.split()
-        dictionary[key.strip()] = value.strip() 
+        modules[key.strip()] = value.strip() 
     
-    return dictionary
+    return modules
 
-def download_modules(modules_dict):
+def download_modules(modules):
     print "Downloading modules"
-    for (module_name, url) in modules_dict.iteritems():
+    for (module_name, url) in modules.iteritems():
         # TODO: Check for errors
         filename = url.split('/')[-1]
         # TODO: Include checksum in config file to verify
@@ -41,6 +41,7 @@ def download_modules(modules_dict):
 def verify_md5(tar_filepath, md5_filepath):
     md5_actual = md5.new(open(tar_filepath, "rb").read()).hexdigest()
     md5_expected = open(md5_filepath, "rb").read().split(' ')[0]
+
     print "Comparing MD5 hashes"
     if md5_actual == md5_expected:
         print "MD5 Checksum verified"
@@ -49,10 +50,12 @@ def verify_md5(tar_filepath, md5_filepath):
     print "MD5 Checksum does not match"
     return False
     
-def extract_modules(modules_dict):
+def extract_modules(modules):
     print "Extracting modules"
+
+    # TODO: Do not hard code
     ext = ".tar.bz2"
-    for (module_name, url) in modules_dict.iteritems():
+    for (module_name, url) in modules.iteritems():
 	    # TODO: Can use key/value pair in the config file
         # TODO: Check if the file exists 
         filename = url.split('/')[-1]
@@ -61,21 +64,24 @@ def extract_modules(modules_dict):
 
         print "[%s] from %s ..." % (module_name, filename)
         tar = tarfile.open(filename, "r:bz2")
+
         for member in tar.getmembers():
             tar.extract(member, "")
+
         tar.close()
         folder_name = filename.strip(".tar.bz2")
 
     print "Completed extracting modules\n"
 
-def get_folder_path(modules_dict, module_name):
+def get_folder_path(modules, module_name):
     ext = ".tar.bz2"
-    filename = modules_dict[module_name].split('/')[-1]
+
+    filename = modules[module_name].split('/')[-1]
     if filename.endswith(ext):
         return filename[:-len(ext)]
 
-def get_file_name(modules_dict, module_name):
-    filename = modules_dict[module_name].split('/')[-1]
+def get_file_name(modules, module_name):
+    filename = modules[module_name].split('/')[-1]
     return filename
 
 def generate_random_text():
@@ -84,19 +90,19 @@ def generate_random_text():
 
 def install_modules(config_filepath):
     # TODO: Add unit tests
-    modules_dict = read_file(config_filepath)
-    download_modules(modules_dict)
+    modules = read_file(config_filepath)
+    download_modules(modules)
 
-    tar_file_path = get_file_name(modules_dict, "vcl")
-    md5_file_path = get_file_name(modules_dict, "vcl-md5")
+    tar_file_path = get_file_name(modules, "vcl")
+    md5_file_path = get_file_name(modules, "vcl-md5")
 
     md5_verified = verify_md5(tar_file_path, md5_file_path)
-    if md5_verified == False:
+    if not md5_verified:
         return
 
-    extract_modules(modules_dict)
+    extract_modules(modules)
     
-    vcl_path = get_folder_path(modules_dict, "vcl")
+    vcl_path = get_folder_path(modules, "vcl")
     install_vcl(vcl_path)
     
     # TODO: Retreive the public IP address of the current machine (VM or 
@@ -192,19 +198,19 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     old_file = open("secrets.php", 'r')
     temp_file = open(abs_path, 'w')
 
-    dictionary = dict()
-    dictionary["$vclhost"] = "'%s'" % vcl_host
-    dictionary["$vcldb"] = "'%s'" % vcl_db
-    dictionary["$vclusername"] = "'%s'" % vcl_username
-    dictionary["$vclpassword"] = "'%s'" % vcl_password
-    dictionary["$cryptkey"] = "'%s'" % generate_random_text()
-    dictionary["$pemkey"] = "'%s'" % generate_random_text()
+    parameters = dict()
+    parameters["$vclhost"] = "'%s'" % vcl_host
+    parameters["$vcldb"] = "'%s'" % vcl_db
+    parameters["$vclusername"] = "'%s'" % vcl_username
+    parameters["$vclpassword"] = "'%s'" % vcl_password
+    parameters["$cryptkey"] = "'%s'" % generate_random_text()
+    parameters["$pemkey"] = "'%s'" % generate_random_text()
 
     for line in old_file:
         if "=" in line:
             key, value = line.split('=')
             newline = "%s = %s;%s" % (key.strip(), 
-                                        dictionary[key.strip()], 
+                                        parameters[key.strip()], 
                                         value.split(';')[1])
             temp_file.write(newline)
         else:
@@ -260,11 +266,13 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
 
     call(["chown", "apache", "maintenance"])
     
-    add_management_node(webserver_ip_address, vclhost)
+    add_management_node(webserver_ip_address, vclhost, 
+                            "admin", "predictive_level_0")
 
     os.chdir(saved_path)
 
-def add_management_node(database_ip_address, hostname):
+def add_management_node(database_ip_address, hostname, username, 
+            pred_module_name):
     stateid = None
     ownerid = None
     premoduleid = None
@@ -277,13 +285,14 @@ def add_management_node(database_ip_address, hostname):
             stateid = row['id']
 
         # TODO: Do not hard code user's unity id
-        cursor.execute("SELECT id FROM user WHERE unityid='admin'")
+        cursor.execute("SELECT id FROM user WHERE unityid='%s'" % username)
         row = cursor.fetchone()
         if row is not None:
             ownerid = row['id']
 
         # TODO: Do not hard code predictive module name
-        cursor.execute("SELECT id FROM module WHERE name='predictive_level_0'")
+        cursor.execute("SELECT id FROM module WHERE 
+                                name='%s'" % pred_module_name)
         row = cursor.fetchone()
         if row is not None:
             premoduleid = row['id']
@@ -343,26 +352,26 @@ def add_management_node(database_ip_address, hostname):
                 "sysadminEmailAddress, " 
                 "sharedMailBox" 
                 ")"
-            " VALUES ('%s', "    # hostname
+            " VALUES ('%s', "   # hostname
                 "'%s', "        # IPaddress
                 "%d, "          # ownerid
                 "%d, "          # stateid
-                "%d, "        # checkininterval                       
-                "'%s', "          # installpath
-                "%d,"          # imagelibenable
-                #("NULL,", "%d,")[parameters["imagelibgroupid"] is not None]# imagelibgroupid
-                "NULL,"
-                "NULL,"          # imagelibuser
-                "NULL,"          # imagelibkey
-                "'%s', "          # keys        
+                "%d, "          # checkininterval                       
+                "'%s', "        # installpath
+                "%d,"           # imagelibenable
+                #("NULL,", "%d,")[parameters["imagelibgroupid"] is not None]
+                "NULL,"         # imagelibgroupid
+                "NULL,"         # imagelibuser
+                "NULL,"         # imagelibkey
+                "'%s', "        # keys        
                 "%d, "          # premoduleid
-                "%d, "        # sshport
-                "'%s',"          # publicIPconfig
-                "NULL,"          # publicnetmask
-                "NULL,"          # publicgateway
-                "NULL,"          # publicdnsserver
-                "NULL,"          # sysminemail
-                "NULL"            # sharedmailbox
+                "%d, "          # sshport
+                "'%s',"         # publicIPconfig
+                "NULL,"         # publicnetmask
+                "NULL,"         # publicgateway
+                "NULL,"         # publicdnsserver
+                "NULL,"         # sysminemail
+                "NULL"          # sharedmailbox
                 ")" %        
             (parameters["hostname"],
              parameters["IPaddress"], 
@@ -455,8 +464,8 @@ def add_management_node(database_ip_address, hostname):
         sys.exit(1)
 
 def install_management_node_components(hostname, database_ip_address, 
-                                    database_user, database_password,
-                                    xmlrpc_password, xmlrpc_url):
+                                        database_user, database_password,
+                                        xmlrpc_password, xmlrpc_url):
     shutil.copytree("apache-VCL-2.3.1/managementnode/", "/usr/local/vcl")
     call(["perl", "/usr/local/vcl/bin/install_perl_libs.pl"])
     if not os.path.exists("/etc/vcl"):
