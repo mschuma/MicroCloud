@@ -15,6 +15,8 @@ import MySQLdb as db
 import sys
 import random
 import string
+import netifaces as ni
+import socket, struct
 
 def read_file(filepath):
     dictionary = dict()
@@ -96,6 +98,7 @@ def install_modules(config_filepath):
     
     vcl_path = get_folder_path(modules_dict, "vcl")
     install_vcl(vcl_path)
+    
     # TODO: Retreive the public IP address of the current machine (VM or 
     #       otherwise)
     # TODO: Move value to configuration file or prompt user for input  
@@ -104,7 +107,7 @@ def install_modules(config_filepath):
     parameters["database_user"] = "vcluser"
     parameters["database_password"] = "vcluserpassword"
     parameters["hostname"] = "localhost"
-    parameters["server_ip_address"] = "192.168.187.145"
+    parameters["server_ip_address"] = get_private_ip_address()
     parameters["xmlrpc_password"] = "password"
     parameters["xmlrpc_url"] = \
                         ("https://%s/vcl/index.php?mode=xmlrpccall" % 
@@ -121,6 +124,53 @@ def install_modules(config_filepath):
                         parameters["database_password"],
                         parameters["xmlrpc_password"],
                         parameters["xmlrpc_url"])
+
+def get_private_ip_address():
+    private_interfaces = dict()
+
+    for interface in ni.interfaces():
+        address = ni.ifaddresses(interface)
+        if (address is not None and 
+            ni.AF_INET in address and 
+            len(address[ni.AF_INET]) > 0 and
+            'addr' in address[ni.AF_INET][0]):
+            ip_address =  address[ni.AF_INET][0]['addr']
+            if is_private_ip_address(ip_address):
+                private_interfaces[interface] = ip_address
+
+    if len(private_interfaces) < 1:
+        print "No private interfaces found"
+        sys.exit(1)
+
+    if len(private_interfaces) > 1:
+        print "Found mutiple private interfaces"
+
+    ip_address = private_interfaces[private_interfaces.keys()[0]]
+    print "Using IP address : " + ip_address
+
+
+def is_private_ip_address(ip_address):
+    private_ip_addresses = dict()
+    private_ip_addresses["classC_start"] = convert_aton_ip("192.168.0.0")
+    private_ip_addresses["classC_end"] = convert_aton_ip("192.168.255.255")
+    private_ip_addresses["classB_start"] = convert_aton_ip("172.16.0.0")
+    private_ip_addresses["classB_end"] = convert_aton_ip("172.31.255.255")
+    private_ip_addresses["classA_start"] = convert_aton_ip("10.0.0.0")
+    private_ip_addresses["classA_end"] = convert_aton_ip("10.255.255.255")
+
+    ip = convert_aton_ip(ip_address)
+
+    isClassA =  (ip >= private_ip_addresses["classA_start"] and 
+                ip <= private_ip_addresses["classA_end"])
+    isClassB =  (ip >= private_ip_addresses["classB_start"] and 
+                ip <= private_ip_addresses["classB_end"])
+    isClassC =  (ip >= private_ip_addresses["classC_start"] and 
+                ip <= private_ip_addresses["classC_end"])
+
+    return isClassA or isClassB or isClassC
+
+def convert_aton_ip(ip_address):
+    return struct.unpack("!L", socket.inet_aton(ip_address))[0]
 
 def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password, 
                         webserver_ip_address):
