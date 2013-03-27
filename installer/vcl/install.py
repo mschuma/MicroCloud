@@ -154,6 +154,8 @@ def get_private_ip_address():
     ip_address = private_interfaces[private_interfaces.keys()[0]]
     print "Using IP address : " + ip_address
 
+    return ip_address
+
 
 def is_private_ip_address(ip_address):
     private_ip_addresses = dict()
@@ -266,7 +268,7 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
 
     call(["chown", "apache", "maintenance"])
     
-    add_management_node(webserver_ip_address, vclhost, 
+    add_management_node(webserver_ip_address, vcl_host, 
                             "admin", "predictive_level_0")
 
     os.chdir(saved_path)
@@ -291,8 +293,8 @@ def add_management_node(database_ip_address, hostname, username,
             ownerid = row['id']
 
         # TODO: Do not hard code predictive module name
-        cursor.execute("SELECT id FROM module WHERE 
-                                name='%s'" % pred_module_name)
+        cursor.execute("SELECT id FROM module WHERE " 
+                        "name='%s'" % pred_module_name)
         row = cursor.fetchone()
         if row is not None:
             premoduleid = row['id']
@@ -394,8 +396,6 @@ def add_management_node(database_ip_address, hostname, username,
              #parameters["sharedmailbox"]
              ))
 
-    print query
-
     try:
         conn = db.connect(db = "vcl")
         cursor = conn.cursor(db.cursors.DictCursor)
@@ -424,7 +424,6 @@ def add_management_node(database_ip_address, hostname, username,
                             "VALUES (%d, %d)" %
                             (managementnode_typeid, lastInsertId))
 
-        print resource_query
         cursor.execute(resource_query)
 
         conn.commit()
