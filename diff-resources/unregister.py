@@ -37,8 +37,8 @@ delete_resourceid_query = "delete from resource where id=" + str(resource_id)
 mysql.execute(delete_resourceid_query)
 
 #Delete the entry for this machine from resourcegroupmember table
-#delete_resourcegroupmember_query = "delete from resourcegroupmembers where resourceid=" + str(resource_id) + "and resourcegroupid=12"
-#mysql.execute(delete_resourcegroupmember_query)
+delete_resourcegroupmember_query = "delete from resourcegroupmembers where resourceid=" + str(resource_id) + " and resourcegroupid=12"
+mysql.execute(delete_resourcegroupmember_query)
 
 conn.commit();
 
