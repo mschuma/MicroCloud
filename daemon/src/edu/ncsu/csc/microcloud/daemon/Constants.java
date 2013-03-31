@@ -12,6 +12,12 @@ public class Constants {
 	public static final String PARENT_PORT = "parent_port";
 	public static final String CHILD_PORT = "child_port";
 	public static final String POLLING_PERIOD = "polling_period";
+	public static final String DB_HOSTNAME = "db_hostname";
+	public static final String DB_NAME = "db_name";
+	public static final String DB_USERNAME = "db_username";
+	public static final String DB_PASSWORD = "db_password";
+	public static final String DB_DRIVER = "db_driver";
+	public static final String DB_URI = "jdbc:mysql://";
 	public static final String DEFAULT_PARENT_IP = "localhost";
 	public static final String DEFAULT_PARENT_PORT = "9000";
 	public static final String DEFAULT_CHILD_PORT = "9090";

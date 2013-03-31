@@ -14,21 +14,11 @@ import java.util.Properties;
 import org.json.simple.JSONObject;
 
 import edu.ncsu.csc.microcloud.daemon.Constants;
+import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 
 public class ChildDaemon {
 
-	private static final String CLASS_NAME = ChildDaemon.class.getCanonicalName();
-	private static Properties properties;
-
-	static {
-		try{
-			properties = new Properties();
-			properties.load(new FileReader(new File(Constants.CONFIG_FILE)));
-		}catch(IOException  ex){
-			System.out.println("Exception while loading the property file @ : " + CLASS_NAME);
-			ex.printStackTrace();
-		}
-	}
+	private static final String CLASS_NAME = ChildDaemon.class.getCanonicalName();	
 
 	/**
 	 * @param args
@@ -44,6 +34,7 @@ public class ChildDaemon {
 	}
 
 	private static void listenToIsAlive() throws IOException{
+		Properties properties = PropertiesHelper.getProperties();
 		String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();
 		ServerSocket listener = new ServerSocket(Integer.parseInt(child_port));
 		try{
@@ -66,6 +57,7 @@ public class ChildDaemon {
 	}
 
 	private static void connectToParent() throws IOException{
+		Properties properties = PropertiesHelper.getProperties();
 		String parent_ip = properties.getProperty(Constants.PARENT_IP, Constants.DEFAULT_PARENT_IP).trim();
 		String parent_port = properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT).trim();
 		Socket client = new Socket(parent_ip, Integer.parseInt(parent_port));

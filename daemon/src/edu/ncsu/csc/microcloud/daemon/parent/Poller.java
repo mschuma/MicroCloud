@@ -2,6 +2,7 @@ package edu.ncsu.csc.microcloud.daemon.parent;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
 
@@ -17,7 +18,7 @@ public class Poller implements Runnable{
 		while(true){
 			try{
 				Thread.sleep(this.pollingPeriod);
-				ArrayList<String> children = ParentDaemon.getChildren();
+				List<String> children = ParentDaemon.getChildren();
 				ArrayList<String> newChildren = new ArrayList<String>();
 				if(children != null && children.size() > 0){
 					Socket childSocket = null;					

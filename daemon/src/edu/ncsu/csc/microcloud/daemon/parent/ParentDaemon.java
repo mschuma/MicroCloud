@@ -1,36 +1,48 @@
 package edu.ncsu.csc.microcloud.daemon.parent;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import edu.ncsu.csc.microcloud.daemon.Constants;
+import edu.ncsu.csc.microcloud.daemon.DBHelper;
+import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
+import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
 
 public class ParentDaemon {
 	private static final String CLASS_NAME = ParentDaemon.class.getCanonicalName();
-	private static ArrayList<String> children = new ArrayList<String>();
-	private static Properties properties;
-
-	static {
-		try{
-			properties = new Properties();
-			properties.load(new FileReader(new File(Constants.CONFIG_FILE)));
-		}catch(IOException  ex){
-			System.out.println("Exception while loading the property file @ : " + CLASS_NAME);
-			ex.printStackTrace();
+	private static List<String> children = new ArrayList<String>();
+	
+	static{
+		//When the parent restarts, load all the children from the DB
+		Connection conn = DBHelper.getConnection();
+		if(conn != null){
+			try{
+				List<String> resources = ResourceRegistration.getChildren(conn);
+				System.out.println("Resources at startup :: " + resources);
+				if(resources != null){
+					setChildren(resources);
+				}
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}finally{
+				DBHelper.closeConnection(conn);
+			}
 		}
+		
 	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException{
 		ServerSocket listener = null;
 		try{
-			
+			Properties properties = PropertiesHelper.getProperties();
 			listener = new ServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
 			System.out.println("Waiting for connections");
 			int pollingPeriod = Integer.parseInt(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
@@ -43,7 +55,9 @@ public class ParentDaemon {
 				t.start();
 			}
 		}finally{
-			listener.close();
+			if(listener != null){
+				listener.close();
+			}
 		}
 	}
 
@@ -58,12 +72,12 @@ public class ParentDaemon {
 			children.remove(child);
 		}
 	}
-	
-	public static synchronized ArrayList<String> getChildren(){
+
+	public static synchronized List<String> getChildren(){
 		return children;
 	}
-	
-	public static synchronized void setChildren(ArrayList<String> childrenList){
+
+	public static synchronized void setChildren(List<String> childrenList){
 		children = childrenList;
 	}
 }
