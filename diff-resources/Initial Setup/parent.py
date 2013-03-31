@@ -10,12 +10,14 @@ except socket.error:
         print 'Failed to create socket'
         sys.exit()
 
-print 'Socket Created'
-if len (sys.argv) != 1 :
+
+if len (sys.argv) != 2:
     print "Usage: python parent.py <child ip address> "
     sys.exit (1)
+
 host = sys.argv[1];
-port = 8888;
+
+port = 9888;
 
 try:
         remote_ip = socket.gethostbyname( host )
@@ -34,8 +36,6 @@ for port in (8888,8900):
       sys.exit()
 
 
-print 'Socket Connected to ' + host + ' on ip ' + remote_ip
-
 #Send some data to remote server
 message = "User Creation"
 
@@ -47,10 +47,9 @@ except socket.error:
         print 'Send failed'
         sys.exit()
 
-print 'Message send successfully'
 
-#Now receive data
-reply = s.recv(4096)
+
+reply = s.recv(1024)
 
 if reply == "User OK":
         print "User Created"
@@ -68,17 +67,21 @@ except socket.error:
         print 'Send failed'
         sys.exit()
 
-		
-		
-		
 #Now receive data
-reply = s.recv(4096)
+reply = s.recv(1024)
 
 if reply == "Sending Key File":
         print 'Sending File'
-        reply = s.recv(4096)
-        fileWrite = open('/etc/vcl/dummylab.key','w+')
-        fileWrite.write(reply)
+        recvd = ''
+        while True:
+                reply = ''
+                size = int(s.recv(16))
+                s.sendall("ready")
+                recvd = s.recv(size,socket.MSG_WAITALL)
+                if len(recvd) == size:
+                        fileWrite = open('/etc/vcl/lab.key','w+')
+                        fileWrite.write(recvd)
+                        break
 
 VCLCONFFILE = open('/etc/vcl/vcld.conf','a+b')
 VCLCONFFILE.write('\n')
@@ -99,17 +102,52 @@ except socket.error:
         print 'Send failed'
         sys.exit()
 
+
 fileRead = open('vcl_sshd','rb')
 data = fileRead.read()
+fileRead.close()
 
-try :
-        #Set the whole string
-        s.sendall(data)
-except socket.error:
-        #Send failed
-        print 'Send failed'
-        sys.exit()
+
+while True:
+        s.sendall("%16d"%len(data))
+        reply =s.recv(1024)
+        if reply == "ready":
+                s.sendall(data)
+                break
+
+
+s.sendall("sending vclclientd")
+reply = s.recv(1024)
+if reply == "Ready":
+        f = open('/usr/local/vcl/bin/vclclientd', "rb")
+        while True:
+                data = ''
+                reply = ''
+                data = f.read()
+                s.sendall("%16d"%len(data))
+                reply = s.recv(1024)
+                if reply == "ready":
+                        s.sendall(data)
+                        break
+
+reply = s.recv(1024)
+if reply == "ready":
+        s.sendall("sending S99vclclient")
+
+reply = s.recv(1024)
+if reply == "Ready":
+        f = open('/usr/local/vcl/bin/S99vclclient.linux', "rb")
+        while True:
+                data = ''
+                reply = ''
+                data = f.read()
+                print 'Length'
+                print len(data)
+                s.sendall("%16d"%len(data))
+                reply = s.recv(1024)
+                if reply == "ready":
+                        s.sendall(data)
+                        break
 
 
 s.close()
-		
