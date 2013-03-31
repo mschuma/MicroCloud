@@ -119,7 +119,7 @@ while True:
 s.sendall("sending vclclientd")
 reply = s.recv(1024)
 if reply == "Ready":
-        f = open('/usr/local/vcl/bin/vclclientd', "rb")
+        f = open('vclclientd', "rb")
         while True:
                 data = ''
                 reply = ''
@@ -136,7 +136,7 @@ if reply == "ready":
 
 reply = s.recv(1024)
 if reply == "Ready":
-        f = open('/usr/local/vcl/bin/S99vclclient.linux', "rb")
+        f = open('S99vclclient.linux', "rb")
         while True:
                 data = ''
                 reply = ''
