@@ -17,11 +17,14 @@ PORT = 8888     # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket created'
 
-try:
+for PORT in (8888,8900):
+	try:
         s.bind((HOST, PORT))
-except socket.error , msg:
+		break
+	except socket.error , msg:
         print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
         sys.exit()
+	
 
 print 'Socket bind complete'
 s.listen(10)

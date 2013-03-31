@@ -11,8 +11,10 @@ except socket.error:
         sys.exit()
 
 print 'Socket Created'
-
-host = '152.46.19.140';
+if len (sys.argv) != 1 :
+    print "Usage: python parent.py <child ip address> "
+    sys.exit (1)
+host = sys.argv[1];
 port = 8888;
 
 try:
@@ -24,7 +26,13 @@ except socket.gaierror:
         sys.exit()
 
 #Connect to remote server
-s.connect((remote_ip , port))
+for port in (8888,8900):
+    try:
+      s.connect((remote_ip , port))
+      break
+    except socket.error, msg:
+      sys.exit()
+
 
 print 'Socket Connected to ' + host + ' on ip ' + remote_ip
 
