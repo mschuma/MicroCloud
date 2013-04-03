@@ -11,7 +11,7 @@ public class DBHelper {
 	public static Connection getConnection(){
 		Connection conn = null;
 		try{
-			Properties properties = PropertiesHelper.getProperties();
+			Properties properties = PropertiesHelper.getParentProperties();
 			Class.forName(properties.getProperty(Constants.DB_DRIVER));
 			String uri = Constants.DB_URI;
 			String username = properties.getProperty(Constants.DB_USERNAME);

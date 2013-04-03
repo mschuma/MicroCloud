@@ -25,5 +25,6 @@ public class Constants {
 	
 	public static final String OK_MESSAGE = "OK";
 	
-	public static final String CONFIG_FILE = "config.properties";
+	public static final String CHILD_CONFIG_FILE = "child_config.properties";
+	public static final String PARENT_CONFIG_FILE = "parent_config.properties";
 }

@@ -1,8 +1,6 @@
 package edu.ncsu.csc.microcloud.daemon.child;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -34,7 +32,7 @@ public class ChildDaemon {
 	}
 
 	private static void listenToIsAlive() throws IOException{
-		Properties properties = PropertiesHelper.getProperties();
+		Properties properties = PropertiesHelper.getChildProperties();
 		String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();
 		ServerSocket listener = new ServerSocket(Integer.parseInt(child_port));
 		try{
@@ -57,7 +55,7 @@ public class ChildDaemon {
 	}
 
 	private static void connectToParent() throws IOException{
-		Properties properties = PropertiesHelper.getProperties();
+		Properties properties = PropertiesHelper.getChildProperties();
 		String parent_ip = properties.getProperty(Constants.PARENT_IP, Constants.DEFAULT_PARENT_IP).trim();
 		String parent_port = properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT).trim();
 		Socket client = new Socket(parent_ip, Integer.parseInt(parent_port));

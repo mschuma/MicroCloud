@@ -42,7 +42,7 @@ public class ParentDaemon {
 	public static void main(String[] args) throws IOException{
 		ServerSocket listener = null;
 		try{
-			Properties properties = PropertiesHelper.getProperties();
+			Properties properties = PropertiesHelper.getParentProperties();
 			listener = new ServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
 			System.out.println("Waiting for connections");
 			int pollingPeriod = Integer.parseInt(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
