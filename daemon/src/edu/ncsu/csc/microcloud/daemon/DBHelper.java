@@ -3,6 +3,7 @@ package edu.ncsu.csc.microcloud.daemon;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -24,6 +25,7 @@ public class DBHelper {
 		}catch(Exception ex){
 			System.out.println("Exception while connecting to the database");
 			ex.printStackTrace();
+			System.exit(-1);
 		}
 		return conn;
 	}
@@ -33,7 +35,7 @@ public class DBHelper {
 			if(conn != null){
 				conn.close();
 			}
-		}catch(Exception ex){
+		}catch(SQLException ex){
 			ex.printStackTrace();
 		}
 	}
@@ -43,7 +45,7 @@ public class DBHelper {
 			if(stmt != null){
 				stmt.close();
 			}
-		}catch(Exception ex){
+		}catch(SQLException ex){
 			ex.printStackTrace();
 		}
 	}
@@ -53,7 +55,7 @@ public class DBHelper {
 			if(rs != null){
 				rs.close();
 			}
-		}catch(Exception ex){
+		}catch(SQLException ex){
 			ex.printStackTrace();
 		}
 	}

@@ -44,7 +44,7 @@ public class ResourceRegistration {
 			}else{
 				System.out.println("Resource " + resourceIP + " is already registered.");
 			}
-		}catch(Exception ex){
+		}catch(SQLException ex){
 			ex.printStackTrace();
 			try{
 				conn.rollback();

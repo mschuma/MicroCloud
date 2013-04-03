@@ -33,6 +33,7 @@ public class PropertiesHelper {
 			}catch(IOException  ex){
 				System.out.println("Exception while loading the property file @ : " + CLASS_NAME);
 				ex.printStackTrace();
+				System.exit(-1);
 			}
 		}
 		return properties;
