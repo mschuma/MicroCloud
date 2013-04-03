@@ -1,15 +1,13 @@
 #!/usr/bin/python
 
 import urllib
-import threading
 import tarfile
 import os
 from subprocess import call
 from os.path import expanduser
 from tempfile import mkstemp
-from shutil import move
 import shutil
-from os import remove, close
+from os import close
 import md5
 import MySQLdb as db
 import sys
@@ -17,6 +15,8 @@ import random
 import string
 import netifaces as ni
 import socket, struct
+
+ext = ".tar.bz2"
 
 def read_file(filepath):
     modules = dict()
@@ -52,11 +52,9 @@ def verify_md5(tar_filepath, md5_filepath):
     
 def extract_modules(modules):
     print "Extracting modules"
-
-    # TODO: Do not hard code
-    ext = ".tar.bz2"
+    
     for (module_name, url) in modules.iteritems():
-	    # TODO: Can use key/value pair in the config file
+        # TODO: Can use key/value pair in the config file
         # TODO: Check if the file exists 
         filename = url.split('/')[-1]
         if filename.endswith(ext) == False:
@@ -68,14 +66,11 @@ def extract_modules(modules):
         for member in tar.getmembers():
             tar.extract(member, "")
 
-        tar.close()
-        folder_name = filename.strip(".tar.bz2")
+        tar.close()        
 
     print "Completed extracting modules\n"
 
 def get_folder_path(modules, module_name):
-    ext = ".tar.bz2"
-
     filename = modules[module_name].split('/')[-1]
     if filename.endswith(ext):
         return filename[:-len(ext)]
@@ -85,8 +80,8 @@ def get_file_name(modules, module_name):
     return filename
 
 def generate_random_text():
-   random_chars = "".join([random.choice(string.letters) for i in xrange(30)])
-   return random_chars
+    random_chars = "".join([random.choice(string.letters) for i in xrange(30)])
+    return random_chars
 
 def install_modules(config_filepath):
     # TODO: Add unit tests
@@ -105,7 +100,7 @@ def install_modules(config_filepath):
     vcl_path = get_folder_path(modules, "vcl")
     install_vcl(vcl_path)
     
-    # TODO: Retreive the public IP address of the current machine (VM or 
+    # TODO: Retrieve the public IP address of the current machine (VM or 
     #       otherwise)
     # TODO: Move value to configuration file or prompt user for input  
     parameters = dict()
@@ -119,12 +114,13 @@ def install_modules(config_filepath):
                         ("https://%s/vcl/index.php?mode=xmlrpccall" % 
                         parameters["server_ip_address"])
 
-    install_webserver(parameters["database_name"], parameters["hostname"], 
+    install_webserver(parameters["database_name"],
+                        parameters["hostname"],
                         parameters["database_user"],
-                        parameters["database_password"], 
+                        parameters["database_password"],
                         parameters["server_ip_address"])
 
-    install_management_node_components(parameters["hostname"], 
+    install_management_node_components(parameters["hostname"],
                         parameters["server_ip_address"],
                         parameters["database_user"],
                         parameters["database_password"],
@@ -140,7 +136,7 @@ def get_private_ip_address():
             ni.AF_INET in address and 
             len(address[ni.AF_INET]) > 0 and
             'addr' in address[ni.AF_INET][0]):
-            ip_address =  address[ni.AF_INET][0]['addr']
+            ip_address = address[ni.AF_INET][0]['addr']
             if is_private_ip_address(ip_address):
                 private_interfaces[interface] = ip_address
 
@@ -149,16 +145,18 @@ def get_private_ip_address():
         sys.exit(1)
 
     if len(private_interfaces) > 1:
-        print "Found mutiple private interfaces"
+        print "Found multiple private interfaces"
 
     ip_address = private_interfaces[private_interfaces.keys()[0]]
     print "Using IP address : " + ip_address
 
     return ip_address
 
-
 def is_private_ip_address(ip_address):
     private_ip_addresses = dict()
+    # TODO: Extend dict to identify each class by a datamember and start/end 
+    #       addresses as properties. Note that the addresses are constant.
+    #       This method should be contained in the created class.
     private_ip_addresses["classC_start"] = convert_aton_ip("192.168.0.0")
     private_ip_addresses["classC_end"] = convert_aton_ip("192.168.255.255")
     private_ip_addresses["classB_start"] = convert_aton_ip("172.16.0.0")
@@ -168,11 +166,11 @@ def is_private_ip_address(ip_address):
 
     ip = convert_aton_ip(ip_address)
 
-    isClassA =  (ip >= private_ip_addresses["classA_start"] and 
+    isClassA = (ip >= private_ip_addresses["classA_start"] and 
                 ip <= private_ip_addresses["classA_end"])
-    isClassB =  (ip >= private_ip_addresses["classB_start"] and 
+    isClassB = (ip >= private_ip_addresses["classB_start"] and 
                 ip <= private_ip_addresses["classB_end"])
-    isClassC =  (ip >= private_ip_addresses["classC_start"] and 
+    isClassC = (ip >= private_ip_addresses["classC_start"] and 
                 ip <= private_ip_addresses["classC_end"])
 
     return isClassA or isClassB or isClassC
@@ -180,10 +178,9 @@ def is_private_ip_address(ip_address):
 def convert_aton_ip(ip_address):
     return struct.unpack("!L", socket.inet_aton(ip_address))[0]
 
-def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password, 
-                        webserver_ip_address):
-    # TODO: Modules list can be moved to config file
-    call(["yum", "install", "httpd", "mod_ssl", "php", "php-gd", "php-mysql", 
+def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
+                        webserver_ip_address):    
+    call(["yum", "install", "httpd", "mod_ssl", "php", "php-gd", "php-mysql",
             "php-xml", "php-xmlrpc", "php-ldap", "-y"])
     call(["/sbin/chkconfig", "--level", "345", "httpd", "on"])
     call(["/sbin/service", "httpd", "start"])
@@ -195,9 +192,9 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     shutil.copy("secrets-default.php", "secrets.php")
 
     # Update the default values
-    fh, abs_path = mkstemp()
-
-    old_file = open("secrets.php", 'r')
+    fh, abs_path = mkstemp()    
+    
+    old_file = open("secrets.php")
     temp_file = open(abs_path, 'w')
 
     parameters = dict()
@@ -211,8 +208,8 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     for line in old_file:
         if "=" in line:
             key, value = line.split('=')
-            newline = "%s = %s;%s" % (key.strip(), 
-                                        parameters[key.strip()], 
+            newline = "%s = %s;%s" % (key.strip(),
+                                        parameters[key.strip()],
                                         value.split(';')[1])
             temp_file.write(newline)
         else:
@@ -225,7 +222,7 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     # Copy from the temp file to secrets.php (so as not to loose the 
     # file permissions on secrets.php
     secrets_file = open("secrets.php", 'w')
-    temp_file = open(abs_path, 'r')
+    temp_file = open(abs_path)
 
     for line in temp_file:
         secrets_file.write(line)
@@ -237,7 +234,7 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     # Update the IP address in conf.php
     fh, abs_path = mkstemp()
 
-    old_file = open("conf.php", 'r')
+    old_file = open("conf.php")
     temp_file = open(abs_path, 'w')
 
     for line in old_file:
@@ -257,7 +254,7 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     # Copy from the temp file to secrets.php (so as not to loose the 
     # file permissions on secrets.php
     conf_file = open("conf.php", 'w')
-    temp_file = open(abs_path, 'r')
+    temp_file = open(abs_path)
 
     for line in temp_file:
         conf_file.write(line)
@@ -265,34 +262,32 @@ def install_webserver(vcl_db, vcl_host, vcl_username, vcl_password,
     conf_file.close()
     
     # TODO: Update the help and error email ids in conf.php
-
     call(["chown", "apache", "maintenance"])
-    
-    add_management_node(webserver_ip_address, vcl_host, 
+   
+    # TODO: Do not hard coded the user and module name
+    add_management_node(webserver_ip_address, vcl_host,
                             "admin", "predictive_level_0")
 
     os.chdir(saved_path)
 
-def add_management_node(database_ip_address, hostname, username, 
+def add_management_node(database_ip_address, hostname, username,
             pred_module_name):
     stateid = None
     ownerid = None
     premoduleid = None
     try:
-        conn = db.connect(db = "vcl")
+        conn = db.connect(db="vcl")
         cursor = conn.cursor(db.cursors.DictCursor)
         cursor.execute("SELECT id FROM state WHERE name='available'")
         row = cursor.fetchone()
         if row is not None:
             stateid = row['id']
 
-        # TODO: Do not hard code user's unity id
         cursor.execute("SELECT id FROM user WHERE unityid='%s'" % username)
         row = cursor.fetchone()
         if row is not None:
             ownerid = row['id']
 
-        # TODO: Do not hard code predictive module name
         cursor.execute("SELECT id FROM module WHERE " 
                         "name='%s'" % pred_module_name)
         row = cursor.fetchone()
@@ -302,7 +297,7 @@ def add_management_node(database_ip_address, hostname, username,
         cursor.close()
         conn.close()
     except db.Error, e:
-        print "MySQL error %d: %s" % (e.args[0],e.args[1])
+        print "MySQL error %d: %s" % (e.args[0], e.args[1])
         sys.exit(1)
 
     if (stateid is None) or (ownerid is None):
@@ -312,11 +307,11 @@ def add_management_node(database_ip_address, hostname, username,
     # TODO: Check if parameterized insert statements are possible
     parameters = dict()
     parameters["hostname"] = hostname
-    # TODO: Retreive machine's private IP address
+    # TODO: Remove hard coding, move values if applicable to the config file
     parameters["IPaddress"] = database_ip_address
     parameters["ownerid"] = ownerid 
     parameters["stateid"] = stateid
-    parameters["checkininterval"] = 5 # 5 secs
+    parameters["checkininterval"] = 5  # 5 secs
     parameters["installpath"] = ""
     parameters["imagelibenable"] = 0 
     parameters["imagelibgroupid"] = None
@@ -354,50 +349,51 @@ def add_management_node(database_ip_address, hostname, username,
                 "sysadminEmailAddress, " 
                 "sharedMailBox" 
                 ")"
-            " VALUES ('%s', "   # hostname
-                "'%s', "        # IPaddress
-                "%d, "          # ownerid
-                "%d, "          # stateid
-                "%d, "          # checkininterval                       
-                "'%s', "        # installpath
-                "%d,"           # imagelibenable
-                #("NULL,", "%d,")[parameters["imagelibgroupid"] is not None]
-                "NULL,"         # imagelibgroupid
-                "NULL,"         # imagelibuser
-                "NULL,"         # imagelibkey
-                "'%s', "        # keys        
-                "%d, "          # premoduleid
-                "%d, "          # sshport
-                "'%s',"         # publicIPconfig
-                "NULL,"         # publicnetmask
-                "NULL,"         # publicgateway
-                "NULL,"         # publicdnsserver
-                "NULL,"         # sysminemail
-                "NULL"          # sharedmailbox
-                ")" %        
+            " VALUES ('%s', "  # hostname
+                "'%s', "  # IPaddress
+                "%d, "  # ownerid
+                "%d, "  # stateid
+                "%d, "  # checkininterval                       
+                "'%s', "  # installpath
+                "%d,"  # imagelibenable
+                # ("NULL,", "%d,")[parameters["imagelibgroupid"] is not None]
+                "NULL,"  # imagelibgroupid
+                "NULL,"  # imagelibuser
+                "NULL,"  # imagelibkey
+                "'%s', "  # keys        
+                "%d, "  # premoduleid
+                "%d, "  # sshport
+                "'%s',"  # publicIPconfig
+                "NULL,"  # publicnetmask
+                "NULL,"  # publicgateway
+                "NULL,"  # publicdnsserver
+                "NULL,"  # sysminemail
+                "NULL"  # sharedmailbox
+                ")" % 
             (parameters["hostname"],
-             parameters["IPaddress"], 
+             parameters["IPaddress"],
              parameters["ownerid"],
-             parameters["stateid"], 
+             parameters["stateid"],
              parameters["checkininterval"],
-             parameters["installpath"], 
-             parameters["imagelibenable"], 
-             #parameters["imagelibgroupid"],
-             #parameters["imagelibuser"], 
-             #parameters["imagelibkey"], 
-             parameters["keys"], 
-             parameters["premoduleid"], 
-             parameters["sshport"], 
-             parameters["publicIPconfig"], 
-             #parameters["publicnetmask"], 
-             #parameters["publicgateway"], 
-             #parameters["publicdnsserver"],
-             #parameters["sysadminemail"],
-             #parameters["sharedmailbox"]
+             parameters["installpath"],
+             parameters["imagelibenable"],
+             # parameters["imagelibgroupid"],
+             # parameters["imagelibuser"], 
+             # parameters["imagelibkey"], 
+             parameters["keys"],
+             parameters["premoduleid"],
+             parameters["sshport"],
+             parameters["publicIPconfig"],
+             # parameters["publicnetmask"], 
+             # parameters["publicgateway"], 
+             # parameters["publicdnsserver"],
+             # parameters["sysadminemail"],
+             # parameters["sharedmailbox"]
              ))
 
+    # TODO: Add code to rollback the transaction in case there is a failure
     try:
-        conn = db.connect(db = "vcl")
+        conn = db.connect(db="vcl")
         cursor = conn.cursor(db.cursors.DictCursor)
 
         # Insert into managementnode table
@@ -421,7 +417,7 @@ def add_management_node(database_ip_address, hostname, username,
         # Insert into resource table
         resource_query = ("INSERT INTO resource " 
                             "(resourcetypeid, subid) " 
-                            "VALUES (%d, %d)" %
+                            "VALUES (%d, %d)" % 
                             (managementnode_typeid, lastInsertId))
 
         cursor.execute(resource_query)
@@ -451,7 +447,7 @@ def add_management_node(database_ip_address, hostname, username,
         resourceGroupId = row["id"]
         cursor.execute("INSERT INTO resourcegroupmembers"
                         "(resourceid, resourcegroupid) "
-                        "VALUES(%d,%d)" %
+                        "VALUES(%d,%d)" % 
                         (resourceId, resourceGroupId))
 
         conn.commit()
@@ -459,10 +455,10 @@ def add_management_node(database_ip_address, hostname, username,
         cursor.close()
         conn.close()
     except db.Error, e:
-        print "MySQL error %d: %s" % (e.args[0],e.args[1])
+        print "MySQL error %d: %s" % (e.args[0], e.args[1])
         sys.exit(1)
 
-def install_management_node_components(hostname, database_ip_address, 
+def install_management_node_components(hostname, database_ip_address,
                                         database_user, database_password,
                                         xmlrpc_password, xmlrpc_url):
     shutil.copytree("apache-VCL-2.3.1/managementnode/", "/usr/local/vcl")
@@ -477,9 +473,8 @@ def install_management_node_components(hostname, database_ip_address,
     call(["/sbin/chkconfig", "--level", "345", "vcld", "on"])
     call(["/sbin/service", "vcld", "start"])
 
-
     update_ssh_conf()
-    update_vcld_conf(hostname, database_ip_address, database_user, 
+    update_vcld_conf(hostname, database_ip_address, database_user,
                         database_password, xmlrpc_password, xmlrpc_url)
 
     # Set the vclsystem account password for xmlrpc api
@@ -489,12 +484,12 @@ def update_ssh_conf():
     conf_filepath = "/etc/ssh/ssh_config"
     
     # TODO: Check whether the entries exist before appending (for each host)
-    file = open(conf_filepath, 'a')
-    file.write("    UserKnownHostsFile /dev/null\n")
-    file.write("    StrictHostKeyChecking no\n")
-    file.close()
+    conf_file = open(conf_filepath, 'a')
+    conf_file.write("    UserKnownHostsFile /dev/null\n")
+    conf_file.write("    StrictHostKeyChecking no\n")
+    conf_file.close()
 
-def update_vcld_conf(hostname, database_ip_address, database_user, 
+def update_vcld_conf(hostname, database_ip_address, database_user,
                         database_password, xmlrpc_password, xmlrpc_url):
     
     parameters = dict()
@@ -509,7 +504,7 @@ def update_vcld_conf(hostname, database_ip_address, database_user,
 
     fh, abs_path = mkstemp()
 
-    old_file = open(conf_filepath, 'r')
+    old_file = open(conf_filepath)
     temp_file = open(abs_path, 'w')
 
     for line in old_file:
@@ -529,11 +524,11 @@ def update_vcld_conf(hostname, database_ip_address, database_user,
     old_file.close()
     temp_file.close()
     close(fh)
-
+    
     # Copy from the temp file to secrets.php (so as not to loose the 
     # file permissions on secrets.php
     conf_file = open(conf_filepath, 'w')
-    temp_file = open(abs_path, 'r')
+    temp_file = open(abs_path)
 
     for line in temp_file:
         conf_file.write(line)
@@ -563,7 +558,8 @@ def configure_mysql(vcl_username, vcl_password):
             print "vcl database exists. Aborting..."
             conn.close()
             return
-
+        
+        # TODO: Do not hardcode localhost
         cursor = conn.cursor()
         cursor.execute("CREATE DATABASE vcl;\
                         GRANT SELECT,INSERT,UPDATE,DELETE,CREATE TEMPORARY \
@@ -572,7 +568,7 @@ def configure_mysql(vcl_username, vcl_password):
         cursor.close()
         conn.close()
     except db.Error, e:
-        print "MySQL error %d: %s" % (e.args[0],e.args[1])
+        print "MySQL error %d: %s" % (e.args[0], e.args[1])
         sys.exit(1)
 
     # Import the sql dump
@@ -595,9 +591,9 @@ def update_webserver_firewall_rules():
     call(["service", "iptables", "restart"])
 
 
-def update_mysql_firewall_rules(webserver_ip_address, 
-                                webserver_port, 
-                                management_node_ip_address, 
+def update_mysql_firewall_rules(webserver_ip_address,
+                                webserver_port,
+                                management_node_ip_address,
                                 management_node_port):
     conf_filepath = "/etc/sysconfig/iptables"
 
@@ -606,31 +602,31 @@ def update_mysql_firewall_rules(webserver_ip_address,
     #       rule exists before adding
     conf_file = open(conf_filepath, 'a')
     conf_file.write("-A RH-Firewall-1-INPUT -m state --state NEW -s " + 
-                        websever_ip_address + " -p tcp --dport " + 
+                        webserver_ip_address + " -p tcp --dport " + 
                         webserver_port + " -j ACCEPT")
     conf_file.write("-A RH-Firewall-1-INPUT -m state --state NEW -s " + 
-                        management_node_ip_address +
-                        " -p tcp --dport " +
-                        management_node_port +
+                        management_node_ip_address + 
+                        " -p tcp --dport " + 
+                        management_node_port + 
                         " -j ACCEPT")
      
     conf_file.close()
     call(["service", "iptables", "restart"])
 
 def cleanup(existing_files):
-    folder=os.getcwd()
+    folder = os.getcwd()
     for entry in os.listdir(folder):
         if entry in existing_files:
             continue            
-        path = os.path.join(folder,entry)        
+        path = os.path.join(folder, entry)        
         if os.path.isfile(path):
             os.unlink(path)
-            print "Deleted "+path
+            print "Deleted " + path
         elif os.path.isdir(path):
-            print "Deleted "+path
+            print "Deleted " + path
             shutil.rmtree(path)
 
 home = expanduser("~")
-#existing_files=os.listdir(os.getcwd())
+existing_files=os.listdir(os.getcwd())
 install_modules("download_config")
-#cleanup(existing_files)
+cleanup(existing_files)
