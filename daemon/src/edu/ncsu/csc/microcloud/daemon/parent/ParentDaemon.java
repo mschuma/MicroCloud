@@ -74,7 +74,11 @@ public class ParentDaemon {
 	}
 
 	public static synchronized List<String> getChildren(){
-		return children;
+		ArrayList<String> clone = new ArrayList<String>();
+		for(String child : children){
+			clone.add(child);
+		}
+		return clone;
 	}
 
 	public static synchronized void setChildren(List<String> childrenList){

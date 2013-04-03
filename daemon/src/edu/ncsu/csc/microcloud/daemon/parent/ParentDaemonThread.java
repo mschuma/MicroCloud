@@ -25,7 +25,7 @@ public class ParentDaemonThread implements Runnable {
 	@Override
 	public void run(){
 		try{
-			System.out.println(socket.getInetAddress());
+			System.out.println("Communication from child :: " + socket.getInetAddress());
 			BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
 			writer.println(Constants.OK_MESSAGE);

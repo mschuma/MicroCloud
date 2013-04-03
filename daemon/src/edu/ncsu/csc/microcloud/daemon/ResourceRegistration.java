@@ -8,14 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceRegistration {
-	private static final String insert_into_computer = "INSERT INTO computer VALUES(null, 2, 1, 1, 1, 5, 5, 5," +
+	private static final String insert_into_computer = "INSERT INTO computer VALUES(null, 2, 1, 1, 1, 8, 8, 8," +
 			"1024, 2, 2000, 1000, ? , ?, NULL, NULL," + 
 			"NULL, 'lab', 3, 'hda', 0, 'Note', '0000-00-00 00:00:00', NULL, 'Lab'," +
 			"NULL, NULL, NULL, NULL, NULL, NULL, NULL)";
 
 	private static final String insert_into_resource = "insert into resource values(null, 12, ?)";
 
-	private static final String insert_into_resourcegroupmembers = "insert into resourcegroupmembers values(?, 1)";
+	private static final String insert_into_resourcegroupmembers = "insert into resourcegroupmembers values(?, 12)";
 
 	private static final String delete_from_computer = "delete from computer where IPaddress = ?";
 

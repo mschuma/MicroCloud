@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     Mar 22, 2013 7:54:08 PM                                                        
+
+     microcloud    
+     description
+                   
+     Manju                                                                
+     ====================================================================== -->
+<project name="microcloud" default="createJars">
+    
+    <description>Microcloud Daemon</description>
+    
+    <property file="build.properties" />
+    
+    <path id="my-class-path">        
+        <fileset dir="${dependencies_location}">
+    		<include name="*.jar"/>
+  		</fileset>
+    </path>
+    
+    <target name="compile" >
+        <javac srcdir="${source_root}"	destdir="${dest_root}">
+            <classpath refid="my-class-path" />
+        </javac>
+    </target>
+
+    <!-- ================================= 
+          target: default              
+         ================================= -->
+    <target name="createJars" depends="compile" description="Create Parent and Child Daemon Jars">
+        <jar destfile="${jar_location}/parent_daemon.jar">
+        	<fileset dir="${dest_root}" excludes="**/child/**" />
+        	<!-- <fileset dir="${project_root}" includes="config.properties" />-->        	
+        </jar>
+    	<jar destfile="${jar_location}/child_daemon.jar">
+    		<fileset dir="${dest_root}" excludes="**/parent/**" />
+    		<!-- <fileset dir="${project_root}" includes="config.properties" />-->
+    	</jar>    	
+    </target> 
+</project>
