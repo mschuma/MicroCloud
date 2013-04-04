@@ -64,7 +64,7 @@ while True:
         data = ''
         reply = ''
         data = f.read()
-		conn.sendall("%16d"%len(data))
+        conn.sendall("%16d"%len(data))
         reply = conn.recv(1024)
         if reply == "ready":
                 conn.sendall(data)

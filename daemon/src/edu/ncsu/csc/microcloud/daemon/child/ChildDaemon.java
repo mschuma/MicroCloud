@@ -23,6 +23,7 @@ public class ChildDaemon {
 	 */
 	public static void main(String[] args) {		
 		try{			
+            invokeChildScript();
 			connectToParent();
 			listenToIsAlive();
 		}catch(IOException ex){
@@ -30,6 +31,22 @@ public class ChildDaemon {
 			ex.printStackTrace();
 		}
 	}
+
+    private static void invokeChildScript() {
+        try {
+                Runtime.getRuntime().exec(
+                      new String[] { "python",
+                "../../../diff-resources/Initial Setup/child.py", "&" });
+  
+                BufferedReader br =
+                      new BufferedReader(new InputStreamReader(System.in));
+                br.readLine();
+            } catch (Exception ex) {
+                System.out.println("Unable to start child script");
+                ex.printStackTrace();
+        }
+    }
+
 
 	private static void listenToIsAlive() throws IOException{
 		Properties properties = PropertiesHelper.getChildProperties();
