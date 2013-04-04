@@ -22,7 +22,14 @@ public class Constants {
 	public static final String DEFAULT_PARENT_PORT = "9000";
 	public static final String DEFAULT_CHILD_PORT = "9090";
 	public static final String DEFAULT_POLLING_PERIOD = "300000";
-	
+
+    public static final String CHILD_SCRIPT_PATH = "child_script_path";
+    public static final String PARENT_SCRIPT_PATH = "parent_script_path";
+	public static final String DEFAULT_CHILD_SCRIPT_PATH = 
+                            "../../../diff-resources/Initial Setup/child.py";
+    public static final String DEFAULT_PARENT_SCRIPT_PATH = 
+                            "../../../diff-resources/Initial Setup/parent.py";
+
 	public static final String OK_MESSAGE = "OK";
 	
 	public static final String CHILD_CONFIG_FILE = "child_config.properties";
