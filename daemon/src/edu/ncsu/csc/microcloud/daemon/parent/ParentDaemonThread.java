@@ -34,6 +34,7 @@ public class ParentDaemonThread implements Runnable {
 				JSONObject json = (JSONObject) JSONValue.parse(message);
 				String msgType = (String)json.get(Constants.MSG_TYPE);
 				if(msgType.equals(Constants.MSG_TYPE_REGISTER)){
+                    invokeParentScript();                
 					registerResource();
 				}else if(msgType.equals(Constants.MSG_TYPE_UNREGISTER)){
 					unregisterResource();
@@ -53,6 +54,19 @@ public class ParentDaemonThread implements Runnable {
 			}
 		}
 	}
+
+    private static void invokeParentScript() {
+        try {
+                // TODO: Remove hard coding, move path to configuration file
+                Runtime.getRuntime().exec(
+                    new String[] { "python",
+                    "../../../diff-resources/Initial Setup/parent.py", "&" });
+            } catch (Exception ex) {
+                System.out.println("Unable to start parent script");
+                ex.printStackTrace();
+        }
+    }
+
 
 	private void unregisterResource() throws IOException{
 		//TODO: invoke the registration API
