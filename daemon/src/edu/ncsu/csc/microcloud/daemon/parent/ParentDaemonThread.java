@@ -57,13 +57,10 @@ public class ParentDaemonThread implements Runnable {
 
     private static void invokeParentScript() {
         try {
-            Runtime.getRuntime().exec(
-                        new String[] { "python",
-                 "../../../diff-resources/Initial Setup/parent.py", "&" });
-  
-            BufferedReader br =
-                        new BufferedReader(new InputStreamReader(System.in));
-            br.readLine();
+                // TODO: Remove hard coding, move path to configuration file
+                Runtime.getRuntime().exec(
+                    new String[] { "python",
+                    "../../../diff-resources/Initial Setup/parent.py", "&" });
             } catch (Exception ex) {
                 System.out.println("Unable to start parent script");
                 ex.printStackTrace();

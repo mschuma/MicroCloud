@@ -33,14 +33,11 @@ public class ChildDaemon {
 	}
 
     private static void invokeChildScript() {
-        try {
+        try {   
+                // TODO: Remove hard coding, move path to configuration file
                 Runtime.getRuntime().exec(
-                      new String[] { "python",
-                "../../../diff-resources/Initial Setup/child.py", "&" });
-  
-                BufferedReader br =
-                      new BufferedReader(new InputStreamReader(System.in));
-                br.readLine();
+                     new String[] { "python",
+                    "../../../diff-resources/Initial Setup/child.py", "&" });
             } catch (Exception ex) {
                 System.out.println("Unable to start child script");
                 ex.printStackTrace();
