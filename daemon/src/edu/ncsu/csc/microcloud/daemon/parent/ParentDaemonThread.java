@@ -6,12 +6,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Properties;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import edu.ncsu.csc.microcloud.daemon.Constants;
 import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
+import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 
 public class ParentDaemonThread implements Runnable {
 	private static final String CLASS_NAME = ParentDaemonThread.class.getCanonicalName();
@@ -53,6 +55,22 @@ public class ParentDaemonThread implements Runnable {
 			}
 		}
 	}
+
+    private static void invokeParentScript() {
+        Properties properties = PropertiesHelper.getParentProperties();
+        String script_path = properties.getProperty(
+                                Constants.PARENT_SCRIPT_PATH,
+                                Constants.DEFAULT_PARENT_SCRIPT_PATH).trim();
+
+        try {               
+                Runtime.getRuntime().exec(
+                    new String[] { "python", script_path, "&" });
+            } catch (Exception ex) {
+                System.out.println("Unable to start parent script");
+                ex.printStackTrace();
+        }
+    }
+
 
 	private void unregisterResource() throws IOException{
 		//TODO: invoke the registration API

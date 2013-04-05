@@ -31,6 +31,22 @@ public class ChildDaemon {
 		}
 	}
 
+    private static void invokeChildScript() {
+		Properties properties = PropertiesHelper.getChildProperties();
+        String script_path = properties.getProperty(
+                                    Constants.CHILD_SCRIPT_PATH,
+                                    Constants.DEFAULT_CHILD_SCRIPT_PATH).trim();
+
+        try {   
+                Runtime.getRuntime().exec(
+                            new String[] { "python", script_path, "&" });
+            } catch (Exception ex) {
+                System.out.println("Unable to start child script");
+                ex.printStackTrace();
+        }
+    }
+
+
 	private static void listenToIsAlive() throws IOException{
 		Properties properties = PropertiesHelper.getChildProperties();
 		String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();

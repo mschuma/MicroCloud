@@ -18,24 +18,39 @@
     		<include name="*.jar"/>
   		</fileset>
     </path>
+
+    <target name="clean" description="Delete old work and dist directories">
+        <delete dir="${jar_location}"/>
+        <delete dir="${dest_root}"/>
+    </target>
     
-    <target name="compile" >
+    <target name="compile" depends="prepare">
         <javac srcdir="${source_root}"	destdir="${dest_root}">
             <classpath refid="my-class-path" />
         </javac>
     </target>
 
+    <target name="prepare" depends="clean" description="Create working dirs">
+        <mkdir  dir="${dest_root}"/>
+        <mkdir  dir="${jar_location}"/>
+    </target>
+
     <!-- ================================= 
           target: default              
          ================================= -->
-    <target name="createJars" depends="compile" description="Create Parent and Child Daemon Jars">
+    <target name="createJars" depends="clean, compile" 
+            description="Create Parent and Child Daemon Jars">
         <jar destfile="${jar_location}/parent_daemon.jar">
         	<fileset dir="${dest_root}" excludes="**/child/**" />
-        	<!-- <fileset dir="${project_root}" includes="config.properties" />-->        	
         </jar>
     	<jar destfile="${jar_location}/child_daemon.jar">
     		<fileset dir="${dest_root}" excludes="**/parent/**" />
-    		<!-- <fileset dir="${project_root}" includes="config.properties" />-->
     	</jar>    	
+        <copy todir="${jar_location}">
+            <fileset dir="${project_root}" includes="child_config.properties"/>
+        </copy>
+        <copy todir="${jar_location}">
+            <fileset dir="${project_root}" includes="parent_config.properties"/>
+        </copy>
     </target> 
 </project>
