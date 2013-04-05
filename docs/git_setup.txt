@@ -1,0 +1,43 @@
+1. Create an account on github
+2. Install and configure git: Execute dev_setup.sh
+3. Clone the project repository 
+   > git clone git clone git@github.com:mschuma/MicroCloud.git
+   You can see the configured sections in .git/config file
+7. View the status
+   > git status
+8. Create your branch (branch name can be developer name or feature name). 
+   > git checkout -b featureA
+   Typically a a major feature may also require creating a new sub folder.
+9. Create and/or edit a file
+   > vim foo.c 
+10. Stage the file
+   > git add foo.c
+11. Commit the changes
+   > git commit -m "My first commit"
+   OR
+   > git commit -am "My first commit" 
+   Add+Commit for tracked files
+12. Push your changes to your branch on remote for the first time with -u
+option
+   > git push -u origin featureA
+   a. Push subsequent changes
+      > git push origin featureA
+13. To retrieve and compare the changes made in another development branch
+    a. > git fetch origin [other-branch-name]
+    b. > git diff devendra..origin/[other-branch-name]
+14. Merge your changes with another remote branch 
+    [other-branch-name] <- featureB
+    a. > git fetch origin featureB 
+    b. > git merge origin/featureB
+    c. > git commit
+    OR
+    a. > git pull origin featureB
+15. View all branches
+    > git branch -a
+16. View Remote branches
+    > git branch -r
+17. Track remote branch (you can view the code in the another branch)
+    > git checkout --track -b featureC origin/featureC
+18. To merge into master initiate a pull request on github. Merge after changes
+    have been reviewed. Note that master is ALWAYS in stable condition.
+19. Issues to be tracked via the github issue tracker
