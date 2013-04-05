@@ -36,7 +36,6 @@ public class ParentDaemonThread implements Runnable {
 				JSONObject json = (JSONObject) JSONValue.parse(message);
 				String msgType = (String)json.get(Constants.MSG_TYPE);
 				if(msgType.equals(Constants.MSG_TYPE_REGISTER)){
-                    invokeParentScript();                
 					registerResource();
 				}else if(msgType.equals(Constants.MSG_TYPE_UNREGISTER)){
 					unregisterResource();

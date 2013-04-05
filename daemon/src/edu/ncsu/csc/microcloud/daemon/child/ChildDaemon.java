@@ -23,7 +23,6 @@ public class ChildDaemon {
 	 */
 	public static void main(String[] args) {		
 		try{			
-            invokeChildScript();
 			connectToParent();
 			listenToIsAlive();
 		}catch(IOException ex){
