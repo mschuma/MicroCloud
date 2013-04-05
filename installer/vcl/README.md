@@ -7,8 +7,11 @@ Scripted install for VCL according to the steps mentioned in the
 Pre requisites
 -----
 The following modules are required for the script:
- 1. netifaces: `yum install python-netifaces`
- 2. MySQL: `yum install MySQL-python`
+ 1. MySQL: `yum install MySQL-python`
+ 2. netifaces: 
+  1. `wget http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm`
+  2. `rpm -Uvh epel-release*rpm`
+  3. `yum install python-netifaces`
 
 Usage
 -----
