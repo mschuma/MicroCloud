@@ -1,11 +1,5 @@
 package edu.ncsu.csc.microcloud.daemon;
 
-import java.security.KeyException;
-import java.security.PublicKey;
-
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
-
-
 public class Constants {
 	
 	public static final String MSG_TYPE = "msg_type";
