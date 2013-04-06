@@ -1,0 +1,4 @@
+apr http://mirror.nexcess.net/apache//apr/apr-1.4.6.tar.gz
+apr-util http://mirror.nexcess.net/apache//apr/apr-util-1.5.1.tar.gz
+pcre http://voxel.dl.sourceforge.net/project/pcre/pcre/8.32/pcre-8.32.tar.gz
+httpd http://mirror.reverse.net/pub/apache//httpd/httpd-2.4.4.tar.gz
