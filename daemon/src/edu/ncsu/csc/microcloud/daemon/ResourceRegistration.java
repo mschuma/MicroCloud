@@ -40,24 +40,26 @@ public class ResourceRegistration {
 												   	    "?, '0000-00-00 00:00:00', " + 			// deleted, datedeleted (22)
 												   	    "?)"; 				// location (23)
 
-	private static final String insert_into_resource = "insert into resource(resourcetypeid, subid) values(?, ?)";
+	private static final String INSERT_INTO_RESOURCE = "INSERT INTO resource(resourcetypeid, subid) VALUES(?, ?)";
 
-	private static final String insert_into_resourcegroupmembers = "insert into resourcegroupmembers(resourceid, resourcegroupid) values(?, ?)";
+	private static final String INSERT_INTO_RESOURCE_GROUP_MEMBERS = "INSERT INTO resourcegroupmembers(resourceid, resourcegroupid) VALUES(?, ?)";
 
-	private static final String delete_from_computer = "delete from computer where IPaddress = ?";
+	private static final String DELETE_FROM_COMPUTER = "DELETE FROM computer WHERE IPaddress = ?";
 
-	private static final String delete_from_resource = "delete from resource where id = ?";
+	private static final String DELETE_FROM_RESOURCE = "DELETE FROM resource WHERE id = ?";
 
-	private static final String delete_from_resourcegroupmembers = "delete from resourcegroupmembers where resourceid = ? and resourcegroupid = ?";
+	private static final String DELETE_FROM_RESOURCE_GROUP_MEMBERS = "DELETE FROM resourcegroupmembers WHERE resourceid = ? AND resourcegroupid = ?";
 
-	private static final String select_id_from_computer = "select id from computer where IPaddress = ?";
+	private static final String SELECT_ID_FROM_COMPUTER = "SELECT id FROM computer WHERE IPaddress = ?";
 	
-	private static final String SELECT_ID_FROM_RESOURCE = "SELECT id FROM resource WHERE resourcetypeid = ? and subid = ?";
+	private static final String SELECT_ID_FROM_RESOURCE = "SELECT id FROM resource WHERE resourcetypeid = ? AND subid = ?";
 	
 	// TODO: String name in all CAPS (constant naming convention)
-	private static final String SELECT_ID_FROM_USER = "SELECT id from user WHERE lastname = ?";
+	private static final String SELECT_ALL_IPADDRESSES = "SELECT IPaddress FROM computer";
 	
-	private static final String SELECT_ID_FROM_SCHEDULE = "SELECT id from schedule WHERE name = ?";
+	private static final String SELECT_ID_FROM_USER = "SELECT id FROM user WHERE lastname = ?";
+	
+	private static final String SELECT_ID_FROM_SCHEDULE = "SELECT id FROM schedule WHERE name = ?";
 	
 	private static final String SELECT_ID_FROM_IMAGE = "SELECT id FROM image WHERE name = ?";
 		
@@ -67,7 +69,7 @@ public class ResourceRegistration {
 	
 	private static final String SELECT_ID_FROM_STATE = "SELECT id FROM state WHERE name = ?";
 	
-	private static final String SELECT_ID_FROM_RESOURCE_GROUP = "SELECT id FROM resourcegroup WHERE name = ? and resourcetypeid = ?";
+	private static final String SELECT_ID_FROM_RESOURCE_GROUP = "SELECT id FROM resourcegroup WHERE name = ? AND resourcetypeid = ?";
 	
 	private static final String SELECT_ID_FROM_RESOURCE_TYPE = "SELECT id FROM resourcetype WHERE name = ?";
 
@@ -196,7 +198,7 @@ public class ResourceRegistration {
 		ResultSet rs = null;
 		int id = -1;
 		try{
-			stmt = conn.prepareStatement(select_id_from_computer);
+			stmt = conn.prepareStatement(SELECT_ID_FROM_COMPUTER);
 			stmt.setString(1, ip);
 			rs = stmt.executeQuery();
 			if(rs != null && rs.next()){
@@ -270,7 +272,7 @@ public class ResourceRegistration {
 	private static void insertIntoResourceGroupMembers(Connection conn, int resourceId, int resourceGroupId) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(insert_into_resourcegroupmembers);
+			stmt = conn.prepareStatement(INSERT_INTO_RESOURCE_GROUP_MEMBERS);
 			stmt.setInt(1, resourceId);
 			stmt.setInt(2, resourceGroupId);
 			stmt.executeUpdate();			
@@ -283,7 +285,7 @@ public class ResourceRegistration {
 	private static void insertIntoResource(Connection conn, int resourceTypeId, int computerId) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(insert_into_resource);
+			stmt = conn.prepareStatement(INSERT_INTO_RESOURCE);
 			stmt.setInt(1, resourceTypeId);
 			stmt.setInt(2, computerId);
 			stmt.executeUpdate();			
@@ -377,7 +379,7 @@ public class ResourceRegistration {
 		System.out.println("Delete entries from ResourceGroupMembers for resource id " + resourceId);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(delete_from_resourcegroupmembers);
+			stmt = conn.prepareStatement(DELETE_FROM_RESOURCE_GROUP_MEMBERS);
 			stmt.setInt(1, resourceId);
 			stmt.setInt(2, resourceGroupId);
 			stmt.executeUpdate();			
@@ -391,7 +393,7 @@ public class ResourceRegistration {
 		System.out.println("Delete  from Resource for resource id " + id);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(delete_from_resource);
+			stmt = conn.prepareStatement(DELETE_FROM_RESOURCE);
 			stmt.setInt(1, id);
 			stmt.executeUpdate();			
 		}finally{
@@ -404,7 +406,7 @@ public class ResourceRegistration {
 		System.out.println("Delete  from Computer for ip " + resourceIP);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(delete_from_computer);
+			stmt = conn.prepareStatement(DELETE_FROM_COMPUTER);
 			stmt.setString(1, resourceIP);			
 			stmt.executeUpdate();			
 		}finally{
@@ -419,7 +421,7 @@ public class ResourceRegistration {
 		if(conn != null){
 			children = new ArrayList<String>();
 			try{
-				stmt = conn.prepareStatement("select IPaddress from computer");				
+				stmt = conn.prepareStatement(SELECT_ALL_IPADDRESSES);				
 				rs = stmt.executeQuery();
 				while(rs.next()){
 					children.add(rs.getString(1));
