@@ -3,6 +3,7 @@ import sys
 import os
 
 def runProcess(exe):
+    # TODO: Kill the process after the diff resources has been setup
     p = subprocess.Popen(exe, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     while(True):
       retcode = p.poll() #returns None while subprocess is running
@@ -86,6 +87,7 @@ if data ==  "Sending SSHD File":
                         fileWrite.close()
                         break
 
+# TODO: Does not retreive the remote address..,
 remote_ip = socket.gethostbyname(socket.gethostname())
 ListenAddress = 'ListenAddress '
 ListenAddress += remote_ip

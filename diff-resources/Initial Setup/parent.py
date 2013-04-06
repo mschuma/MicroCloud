@@ -84,8 +84,8 @@ if reply == "Sending Key File":
                         break
 
 VCLCONFFILE = open('/etc/vcl/vcld.conf','a+b')
-VCLCONFFILE.write('\n')
-VCLCONFFILE.write('IDENTITY_solaris_lab=/etc/vcl/lab.key')
+#VCLCONFFILE.write('\n')
+#VCLCONFFILE.write('IDENTITY_solaris_lab=/etc/vcl/lab.key')
 VCLCONFFILE.write('\n')
 VCLCONFFILE.write('IDENTITY_linux_lab=/etc/vcl/lab.key')
 VCLCONFFILE.close()
