@@ -48,7 +48,7 @@ public class ResourceRegistration {
 
 	private static final String delete_from_resource = "delete from resource where id = ?";
 
-	private static final String delete_from_resourcegroupmembers = "delete from resourcegroupmembers where resourceid = ?";
+	private static final String delete_from_resourcegroupmembers = "delete from resourcegroupmembers where resourceid = ? and resourcegroupid = ?";
 
 	private static final String select_id_from_computer = "select id from computer where IPaddress = ?";
 	
@@ -68,6 +68,7 @@ public class ResourceRegistration {
 	private static final String SELECT_ID_FROM_STATE = "SELECT id FROM state WHERE name = ?";
 	
 	private static final String SELECT_ID_FROM_RESOURCE_GROUP = "SELECT id FROM resourcegroup WHERE name = ? and resourcetypeid = ?";
+	
 	private static final String SELECT_ID_FROM_RESOURCE_TYPE = "SELECT id FROM resourcetype WHERE name = ?";
 
 	public static void registerResource(String resourceIP){
@@ -289,7 +290,6 @@ public class ResourceRegistration {
 		}finally{
 			DBHelper.closeStatement(stmt);
 		}
-
 	}
 
 	private static void insertIntoComputer(Connection conn, Computer computer) throws SQLException{
@@ -342,13 +342,21 @@ public class ResourceRegistration {
 
 	public static void unregisterResource(String resourceIP){
 		Connection conn = DBHelper.getConnection();
+		Properties properties = PropertiesHelper.getParentProperties();		
+		
+		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME, 
+				Constants.ChildImage.DefaultValue.COMPUTER_GROUP_NAME).trim();
+		
 		try{
 			conn.setAutoCommit(false);
 			int computerId = selectIdFromComputer(conn, resourceIP);
 			
 			int resourceTypeId = selectIdFromTable(conn, SELECT_ID_FROM_RESOURCE_TYPE, "computer");
-			int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);			
-			deleteFromResourceGroupMembers(conn, resourceId);
+			int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);
+			
+			int resourceGroupId = selectIdFromResourceGroup(conn, computerGroupName, resourceTypeId);
+			
+			deleteFromResourceGroupMembers(conn, resourceId, resourceGroupId);
 			deleteFromResource(conn, resourceId);
 			deleteFromComputer(conn, resourceIP);
 			conn.commit();
@@ -365,12 +373,13 @@ public class ResourceRegistration {
 
 	}
 
-	private static void deleteFromResourceGroupMembers(Connection conn, int resourceId) throws SQLException{
+	private static void deleteFromResourceGroupMembers(Connection conn, int resourceId, int resourceGroupId) throws SQLException{
 		System.out.println("Delete entries from ResourceGroupMembers for resource id " + resourceId);
 		PreparedStatement stmt = null;
 		try{
 			stmt = conn.prepareStatement(delete_from_resourcegroupmembers);
 			stmt.setInt(1, resourceId);
+			stmt.setInt(2, resourceGroupId);
 			stmt.executeUpdate();			
 		}finally{
 			DBHelper.closeStatement(stmt);
