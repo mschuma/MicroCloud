@@ -18,7 +18,7 @@ public class ResourceRegistration {
 	//   	"eth0macaddress, eth1macaddress, type, provisioningid, drivetype, deleted, datedeleted, " +
 	//	    "notes, lastcheck, location, dsa, dsapub, rsa, rsapub, host, hostpub, vmhostid, vmtypeid)
 	// TODO: When default values are being used do not specify values
-	private static final String insert_into_computer = "INSERT INTO computer (" +
+	private static final String INSERT_INTO_COMPUTER = "INSERT INTO computer (" +
 													   	"stateid, ownerid, platformid, scheduleid, " + 
 													   	"currentimageid, nextimageid, imagerevisionid, " + 
 												   	    "RAM, procnumber, procspeed, network, " + 
@@ -297,7 +297,7 @@ public class ResourceRegistration {
 	private static void insertIntoComputer(Connection conn, Computer computer) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(insert_into_computer);
+			stmt = conn.prepareStatement(INSERT_INTO_COMPUTER);
 			stmt.setInt(1, computer.stateId);
 			stmt.setInt(2, computer.ownerId);
 			stmt.setInt(3, computer.platformId);
