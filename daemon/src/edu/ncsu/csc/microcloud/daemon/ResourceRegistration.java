@@ -13,65 +13,77 @@ import java.util.Properties;
 
 public class ResourceRegistration {
 	
-	//	stateid, ownerid, platformid, scheduleid, currentimageid, nextimageid, imagerevisionid, " + 
-	//	   "RAM, procnumber, procspeed, network, hostname, IPaddress, privateIPaddress, " + 
-	//   	"eth0macaddress, eth1macaddress, type, provisioningid, drivetype, deleted, datedeleted, " +
-	//	    "notes, lastcheck, location, dsa, dsapub, rsa, rsapub, host, hostpub, vmhostid, vmtypeid)
-	// TODO: When default values are being used do not specify values
-	private static final String INSERT_INTO_COMPUTER = "INSERT INTO computer (" +
-													   	"stateid, ownerid, platformid, scheduleid, " + 
-													   	"currentimageid, nextimageid, imagerevisionid, " + 
-												   	    "RAM, procnumber, procspeed, network, " + 
-													   	"hostname, IPaddress, privateIPaddress, " + 
-													   	"eth0macaddress, eth1macaddress, " + 
-													   	"type, provisioningid, " +
-													   	"drivetype, " + 
-											   			"deleted, datedeleted, " +
-												   	    "location) " +
-													    "VALUES(" +
-												   	    "?, ?, ?, ?, " + 	// stateid, ownerid, platformid, scheduleid (1-4)
-												   	    "?, ?, ?, " + 		// currentimageid, nextimageid, imagerevisionid (5-8)
-												   	    "?, ?, ?, ?, " + 	// RAM, procnumber, procspeed, network (9-13)
-												   	    "?, ?, ?, " + 		// hostname, IPaddress, privateIPaddress (14-16)
-												   	    "?, ?, " + 			// eth0macaddress, eth1macaddress (17-18)
-												   	    "?, ?, " + 			// type, provisioningid (19-20)
-												   	    "?, " + 			// drive type (21)
-												   	    // TODO: Unable to parse date time of this format!
-												   	    "?, '0000-00-00 00:00:00', " + 			// deleted, datedeleted (22)
-												   	    "?)"; 				// location (23)
+	static class SQLQueries
+	{
+		public static class Insert
+		{
+			//		stateid, ownerid, platformid, scheduleid, currentimageid, nextimageid, imagerevisionid, " + 
+			//	   "RAM, procnumber, procspeed, network, hostname, IPaddress, privateIPaddress, " + 
+			//   	"eth0macaddress, eth1macaddress, type, provisioningid, drivetype, deleted, datedeleted, " +
+			//	    "notes, lastcheck, location, dsa, dsapub, rsa, rsapub, host, hostpub, vmhostid, vmtypeid)
+			// TODO: When default values are being used do not specify values
+			public static final String COMPUTER = "INSERT INTO computer (" +
+															   	"stateid, ownerid, platformid, scheduleid, " + 
+															   	"currentimageid, nextimageid, imagerevisionid, " + 
+														   	    "RAM, procnumber, procspeed, network, " + 
+															   	"hostname, IPaddress, privateIPaddress, " + 
+															   	"eth0macaddress, eth1macaddress, " + 
+															   	"type, provisioningid, " +
+															   	"drivetype, " + 
+													   			"deleted, datedeleted, " +
+														   	    "location) " +
+															    "VALUES(" +
+														   	    "?, ?, ?, ?, " + 	// stateid, ownerid, platformid, scheduleid (1-4)
+														   	    "?, ?, ?, " + 		// currentimageid, nextimageid, imagerevisionid (5-8)
+														   	    "?, ?, ?, ?, " + 	// RAM, procnumber, procspeed, network (9-13)
+														   	    "?, ?, ?, " + 		// hostname, IPaddress, privateIPaddress (14-16)
+														   	    "?, ?, " + 			// eth0macaddress, eth1macaddress (17-18)
+														   	    "?, ?, " + 			// type, provisioningid (19-20)
+														   	    "?, " + 			// drive type (21)
+														   	    // TODO: Unable to parse date time of this format!
+														   	    "?, '0000-00-00 00:00:00', " + 			// deleted, datedeleted (22)
+														   	    "?)"; 				// location (23)
+			
+			public static final String RESOURCE = "INSERT INTO resource(resourcetypeid, subid) VALUES(?, ?)";
 
-	private static final String INSERT_INTO_RESOURCE = "INSERT INTO resource(resourcetypeid, subid) VALUES(?, ?)";
-
-	private static final String INSERT_INTO_RESOURCE_GROUP_MEMBERS = "INSERT INTO resourcegroupmembers(resourceid, resourcegroupid) VALUES(?, ?)";
-
-	private static final String DELETE_FROM_COMPUTER = "DELETE FROM computer WHERE IPaddress = ?";
-
-	private static final String DELETE_FROM_RESOURCE = "DELETE FROM resource WHERE id = ?";
-
-	private static final String DELETE_FROM_RESOURCE_GROUP_MEMBERS = "DELETE FROM resourcegroupmembers WHERE resourceid = ? AND resourcegroupid = ?";
-
-	private static final String SELECT_ID_FROM_COMPUTER = "SELECT id FROM computer WHERE IPaddress = ?";
-	
-	private static final String SELECT_ID_FROM_RESOURCE = "SELECT id FROM resource WHERE resourcetypeid = ? AND subid = ?";
-	
-	// TODO: String name in all CAPS (constant naming convention)
-	private static final String SELECT_ALL_IPADDRESSES = "SELECT IPaddress FROM computer";
-	
-	private static final String SELECT_ID_FROM_USER = "SELECT id FROM user WHERE lastname = ?";
-	
-	private static final String SELECT_ID_FROM_SCHEDULE = "SELECT id FROM schedule WHERE name = ?";
-	
-	private static final String SELECT_ID_FROM_IMAGE = "SELECT id FROM image WHERE name = ?";
+			public static final String RESOURCE_GROUP_MEMBERS = "INSERT INTO resourcegroupmembers(resourceid, resourcegroupid) VALUES(?, ?)";
+		}
 		
-	private static final String SELECT_ID_FROM_PROVISIONING = "SELECT id FROM provisioning WHERE name = ?";
-	
-	private static final String SELECT_ID_FROM_PLATFORM = "SELECT id FROM platform WHERE name = ?";	
-	
-	private static final String SELECT_ID_FROM_STATE = "SELECT id FROM state WHERE name = ?";
-	
-	private static final String SELECT_ID_FROM_RESOURCE_GROUP = "SELECT id FROM resourcegroup WHERE name = ? AND resourcetypeid = ?";
-	
-	private static final String SELECT_ID_FROM_RESOURCE_TYPE = "SELECT id FROM resourcetype WHERE name = ?";
+		public static class Delete
+		{
+			public static final String COMPUTER = "DELETE FROM computer WHERE IPaddress = ?";
+
+			public static final String RESOURCE = "DELETE FROM resource WHERE id = ?";
+
+			public static final String RESOURCE_GROUP_MEMBERS = "DELETE FROM resourcegroupmembers WHERE resourceid = ? AND resourcegroupid = ?";
+		}
+		
+		public static class SelectId
+		{
+			public static final String COMPUTER = "SELECT id FROM computer WHERE IPaddress = ?";
+			
+			public static final String RESOURCE = "SELECT id FROM resource WHERE resourcetypeid = ? AND subid = ?";
+			
+			public static final String USER = "SELECT id FROM user WHERE lastname = ?";
+			
+			public static final String SCHEDULE = "SELECT id FROM schedule WHERE name = ?";
+			
+			public static final String IMAGE = "SELECT id FROM image WHERE name = ?";
+				
+			public static final String PROVISIONING = "SELECT id FROM provisioning WHERE name = ?";
+			
+			public static final String PLATFORM = "SELECT id FROM platform WHERE name = ?";	
+			
+			public static final String STATE = "SELECT id FROM state WHERE name = ?";
+			
+			public static final String RESOURCE_GROUP = "SELECT id FROM resourcegroup WHERE name = ? AND resourcetypeid = ?";
+			
+			public static final String RESOURCE_TYPE = "SELECT id FROM resourcetype WHERE name = ?";
+		}
+		
+		// TODO: String name in all CAPS (constant naming convention)
+		public static final String SELECT_ALL_IPADDRESSES = "SELECT IPaddress FROM computer";
+	}
 
 	public static void registerResource(String resourceIP){
 		Connection conn = DBHelper.getConnection();
@@ -132,12 +144,12 @@ public class ResourceRegistration {
 			int computerId = selectIdFromComputer(conn, resourceIP);
 			if(computerId == -1){
 				Computer computer = new Computer();
-				computer.stateId = selectIdFromTable(conn, SELECT_ID_FROM_STATE, stateName);
-				computer.ownerId = selectIdFromTable(conn, SELECT_ID_FROM_USER, ownerName);
-				computer.platformId = selectIdFromTable(conn, SELECT_ID_FROM_PLATFORM, platformName);
-				computer.scheduleId = selectIdFromTable(conn, SELECT_ID_FROM_SCHEDULE, scheduleName);
+				computer.stateId = selectIdFromTable(conn, SQLQueries.SelectId.STATE, stateName);
+				computer.ownerId = selectIdFromTable(conn, SQLQueries.SelectId.USER, ownerName);
+				computer.platformId = selectIdFromTable(conn, SQLQueries.SelectId.PLATFORM, platformName);
+				computer.scheduleId = selectIdFromTable(conn, SQLQueries.SelectId.SCHEDULE, scheduleName);
 				
-				Integer imageId = selectIdFromTable(conn, SELECT_ID_FROM_IMAGE, imageName);
+				Integer imageId = selectIdFromTable(conn, SQLQueries.SelectId.IMAGE, imageName);
 				computer.currentImageId = imageId;
 				computer.nextImageId = imageId;
 				computer.imageRevisionId = imageId;			
@@ -155,7 +167,7 @@ public class ResourceRegistration {
 				computer.eth1MACAddress = "";
 				
 				computer.type = computerType;
-				computer.provisioningId = selectIdFromTable(conn, SELECT_ID_FROM_PROVISIONING, provisioningName);
+				computer.provisioningId = selectIdFromTable(conn, SQLQueries.SelectId.PROVISIONING, provisioningName);
 				computer.driveType = computerDriveType;
 
 				// TODO: Remove hard coding
@@ -167,7 +179,7 @@ public class ResourceRegistration {
 				insertIntoComputer(conn, computer);
 				computerId = selectIdFromComputer(conn, resourceIP);
 				
-				int resourceTypeId = selectIdFromTable(conn, SELECT_ID_FROM_RESOURCE_TYPE, "computer");				
+				int resourceTypeId = selectIdFromTable(conn, SQLQueries.SelectId.RESOURCE_TYPE, "computer");				
 				insertIntoResource(conn, resourceTypeId, computerId);				
 				
 				int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);
@@ -198,7 +210,7 @@ public class ResourceRegistration {
 		ResultSet rs = null;
 		int id = -1;
 		try{
-			stmt = conn.prepareStatement(SELECT_ID_FROM_COMPUTER);
+			stmt = conn.prepareStatement(SQLQueries.SelectId.COMPUTER);
 			stmt.setString(1, ip);
 			rs = stmt.executeQuery();
 			if(rs != null && rs.next()){
@@ -216,7 +228,7 @@ public class ResourceRegistration {
 		ResultSet rs = null;
 		int id = -1;
 		try{
-			stmt = conn.prepareStatement(SELECT_ID_FROM_RESOURCE);
+			stmt = conn.prepareStatement(SQLQueries.SelectId.RESOURCE);
 			stmt.setInt(1, resourceTypeId);
 			stmt.setInt(2, computerId);
 			
@@ -236,7 +248,7 @@ public class ResourceRegistration {
 		ResultSet rs = null;
 		int id = -1;
 		try{
-			stmt = conn.prepareStatement(SELECT_ID_FROM_RESOURCE_GROUP);
+			stmt = conn.prepareStatement(SQLQueries.SelectId.RESOURCE_GROUP);
 			stmt.setString(1, name);
 			stmt.setInt(2, resourceTypeId);		
 			
@@ -272,7 +284,7 @@ public class ResourceRegistration {
 	private static void insertIntoResourceGroupMembers(Connection conn, int resourceId, int resourceGroupId) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(INSERT_INTO_RESOURCE_GROUP_MEMBERS);
+			stmt = conn.prepareStatement(SQLQueries.Insert.RESOURCE_GROUP_MEMBERS);
 			stmt.setInt(1, resourceId);
 			stmt.setInt(2, resourceGroupId);
 			stmt.executeUpdate();			
@@ -285,7 +297,7 @@ public class ResourceRegistration {
 	private static void insertIntoResource(Connection conn, int resourceTypeId, int computerId) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(INSERT_INTO_RESOURCE);
+			stmt = conn.prepareStatement(SQLQueries.Insert.RESOURCE);
 			stmt.setInt(1, resourceTypeId);
 			stmt.setInt(2, computerId);
 			stmt.executeUpdate();			
@@ -297,7 +309,7 @@ public class ResourceRegistration {
 	private static void insertIntoComputer(Connection conn, Computer computer) throws SQLException{
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(INSERT_INTO_COMPUTER);
+			stmt = conn.prepareStatement(SQLQueries.Insert.COMPUTER);
 			stmt.setInt(1, computer.stateId);
 			stmt.setInt(2, computer.ownerId);
 			stmt.setInt(3, computer.platformId);
@@ -353,7 +365,7 @@ public class ResourceRegistration {
 			conn.setAutoCommit(false);
 			int computerId = selectIdFromComputer(conn, resourceIP);
 			
-			int resourceTypeId = selectIdFromTable(conn, SELECT_ID_FROM_RESOURCE_TYPE, "computer");
+			int resourceTypeId = selectIdFromTable(conn, SQLQueries.SelectId.RESOURCE_TYPE, "computer");
 			int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);
 			
 			int resourceGroupId = selectIdFromResourceGroup(conn, computerGroupName, resourceTypeId);
@@ -379,7 +391,7 @@ public class ResourceRegistration {
 		System.out.println("Delete entries from ResourceGroupMembers for resource id " + resourceId);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(DELETE_FROM_RESOURCE_GROUP_MEMBERS);
+			stmt = conn.prepareStatement(SQLQueries.Delete.RESOURCE_GROUP_MEMBERS);
 			stmt.setInt(1, resourceId);
 			stmt.setInt(2, resourceGroupId);
 			stmt.executeUpdate();			
@@ -393,7 +405,7 @@ public class ResourceRegistration {
 		System.out.println("Delete  from Resource for resource id " + id);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(DELETE_FROM_RESOURCE);
+			stmt = conn.prepareStatement(SQLQueries.Delete.RESOURCE);
 			stmt.setInt(1, id);
 			stmt.executeUpdate();			
 		}finally{
@@ -406,7 +418,7 @@ public class ResourceRegistration {
 		System.out.println("Delete  from Computer for ip " + resourceIP);
 		PreparedStatement stmt = null;
 		try{
-			stmt = conn.prepareStatement(DELETE_FROM_COMPUTER);
+			stmt = conn.prepareStatement(SQLQueries.Delete.COMPUTER);
 			stmt.setString(1, resourceIP);			
 			stmt.executeUpdate();			
 		}finally{
@@ -421,7 +433,7 @@ public class ResourceRegistration {
 		if(conn != null){
 			children = new ArrayList<String>();
 			try{
-				stmt = conn.prepareStatement(SELECT_ALL_IPADDRESSES);				
+				stmt = conn.prepareStatement(SQLQueries.SELECT_ALL_IPADDRESSES);				
 				rs = stmt.executeQuery();
 				while(rs.next()){
 					children.add(rs.getString(1));
