@@ -17,6 +17,19 @@ import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 public class ChildDaemon {
 
 	private static final String CLASS_NAME = ChildDaemon.class.getCanonicalName();	
+	private static long CONNECTION_RETRY_TIME;
+	static{
+		String connectionRetryTime = PropertiesHelper.getChildProperties().getProperty(Constants.CONNECTION_RETRY_TIME,
+				Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
+		try{
+			CONNECTION_RETRY_TIME = Long.parseLong(connectionRetryTime);
+		}catch(NumberFormatException ex){
+			System.out.println("number format exception for the property :: " + Constants.CONNECTION_RETRY_TIME);
+			System.out.println("Its value is :: " + connectionRetryTime);
+			ex.printStackTrace();
+			System.exit(-1);
+		}
+	}
 
 	/**
 	 * @param args
@@ -31,21 +44,21 @@ public class ChildDaemon {
 		}
 	}
 
-    private static void invokeChildScript() {
+	/*private static void invokeChildScript() {
 		Properties properties = PropertiesHelper.getChildProperties();
-        String script_path = properties.getProperty(
-                                    Constants.CHILD_SCRIPT_PATH,
-                                    Constants.DEFAULT_CHILD_SCRIPT_PATH).trim();
+		String script_path = properties.getProperty(
+				Constants.CHILD_SCRIPT_PATH,
+				Constants.DEFAULT_CHILD_SCRIPT_PATH).trim();
 
-        try {   
-                Runtime.getRuntime().exec(
-                            new String[] { "python", script_path, "&" });
-            } catch (Exception ex) {
-                System.out.println("Unable to start child script");
-                ex.printStackTrace();
-        }
-    }
-
+		try {   
+			Runtime.getRuntime().exec(
+					new String[] { "python", script_path, "&" });
+		} catch (Exception ex) {
+			System.out.println("Unable to start child script");
+			ex.printStackTrace();
+		}
+	}
+	 */
 
 	private static void listenToIsAlive() throws IOException{
 		Properties properties = PropertiesHelper.getChildProperties();
@@ -74,7 +87,32 @@ public class ChildDaemon {
 		Properties properties = PropertiesHelper.getChildProperties();
 		String parent_ip = properties.getProperty(Constants.PARENT_IP, Constants.DEFAULT_PARENT_IP).trim();
 		String parent_port = properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT).trim();
-		Socket client = new Socket(parent_ip, Integer.parseInt(parent_port));
+
+		System.out.println("Parent IP :: " + parent_ip);
+		System.out.println("Parent port :: " + parent_port);
+
+		boolean connected = false;
+		int connectionAttempt = 1;
+		Socket client = null;
+
+		while(!connected){
+			try{
+				client = new Socket(parent_ip, Integer.parseInt(parent_port));
+				connected = true;
+			}catch(Exception ex){
+				System.out.println("Attempt :: " + connectionAttempt + " => Unable to connect to the parent");
+				ex.printStackTrace();
+			}
+			try{				
+				Thread.sleep(CONNECTION_RETRY_TIME);
+			}catch(InterruptedException ex){
+				System.out.println("Exception while child thread sleeps");
+				ex.printStackTrace();
+			}
+			connectionAttempt++;
+		}
+
+		System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
 		JSONObject json = new JSONObject();
 		json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_REGISTER);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));

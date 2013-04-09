@@ -10,6 +10,8 @@ public class Constants {
 	public static final String PARENT_IP = "parent_ip";
 	public static final String PARENT_PORT = "parent_port";
 	public static final String CHILD_PORT = "child_port";
+	public static final String CONNECTION_RETRY_TIME = "connection_retry_time";
+	public static final String CONNECTION_RETRIES_ALLOWED = "connection_retries_allowed";
 	public static final String POLLING_PERIOD = "polling_period";
 	public static final String DB_HOSTNAME = "db_hostname";
 	public static final String DB_NAME = "db_name";
@@ -21,6 +23,8 @@ public class Constants {
 	public static final String DEFAULT_PARENT_PORT = "9000";
 	public static final String DEFAULT_CHILD_PORT = "9090";
 	public static final String DEFAULT_POLLING_PERIOD = "300000";
+	public static final String DEFAULT_CONNECTION_RETRIES_ALLOWED = "10";
+	public static final String DEFAULT_CONNECTION_RETRY_TIME = "60000";
 
     public static final String CHILD_SCRIPT_PATH = "child_script_path";
     public static final String PARENT_SCRIPT_PATH = "parent_script_path";
