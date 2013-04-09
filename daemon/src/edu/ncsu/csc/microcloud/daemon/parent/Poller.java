@@ -62,9 +62,13 @@ public class Poller implements Runnable{
 							}catch(Exception ex){
 								//ex.printStackTrace();								
 								System.out.println("Ping attempt number " + attemptId + " for child " + child + " is unsuccessful");
-							}
-							attemptId++;
-							Thread.sleep(CONNECTION_RETRY_TIME);
+								attemptId++;
+								try{
+									Thread.sleep(CONNECTION_RETRY_TIME);
+								}catch(InterruptedException iex){
+									iex.printStackTrace();
+								}
+							}							
 						}
 						if(!connected){
 							//unregister the child

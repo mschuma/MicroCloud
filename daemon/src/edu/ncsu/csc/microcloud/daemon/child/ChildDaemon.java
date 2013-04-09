@@ -102,14 +102,15 @@ public class ChildDaemon {
 			}catch(Exception ex){
 				System.out.println("Attempt :: " + connectionAttempt + " => Unable to connect to the parent");
 				ex.printStackTrace();
+				try{				
+					Thread.sleep(CONNECTION_RETRY_TIME);
+				}catch(InterruptedException iex){
+					System.out.println("Exception while child thread sleeps");
+					iex.printStackTrace();
+				}
+				connectionAttempt++;
 			}
-			try{				
-				Thread.sleep(CONNECTION_RETRY_TIME);
-			}catch(InterruptedException ex){
-				System.out.println("Exception while child thread sleeps");
-				ex.printStackTrace();
-			}
-			connectionAttempt++;
+
 		}
 
 		System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
