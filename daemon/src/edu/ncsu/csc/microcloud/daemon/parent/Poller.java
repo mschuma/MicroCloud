@@ -31,7 +31,7 @@ public class Poller implements Runnable{
 
 		try{
 
-			CONNECTION_RETRY_TIME = Integer.parseInt(connectionRetryTime);
+			CONNECTION_RETRY_TIME = Long.parseLong(connectionRetryTime);
 		}catch(NumberFormatException ex){
 			System.out.println("number format exception for the property :: " + Constants.CONNECTION_RETRY_TIME);
 			System.out.println("Its value is :: " + connectionRetryTime);
