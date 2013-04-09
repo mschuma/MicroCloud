@@ -45,7 +45,7 @@ public class ParentDaemon {
 			Properties properties = PropertiesHelper.getParentProperties();
 			listener = new ServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
 			System.out.println("Waiting for connections");
-			int pollingPeriod = Integer.parseInt(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
+			long pollingPeriod = Long.parseLong(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
 			int childPort = Integer.parseInt(properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim());
 			Thread poller = new Thread(new Poller(pollingPeriod, childPort));
 			poller.start();
