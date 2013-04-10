@@ -160,8 +160,8 @@ public class ResourceRegistration {
 				computer.hostName = resourceIP;
 				computer.IPAddress = resourceIP;
 				computer.privateIPAddress = "";
-				computer.eth0MACAddress = "";
-				computer.eth1MACAddress = "";
+				computer.eth0MACAddress = resourceIP;
+				computer.eth1MACAddress = resourceIP;
 				
 				computer.type = computerType;
 				computer.provisioningId = selectIdFromTable(conn, SQLQueries.SelectId.PROVISIONING, provisioningName);
