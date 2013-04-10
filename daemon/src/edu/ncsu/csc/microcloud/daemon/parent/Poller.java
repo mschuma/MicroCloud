@@ -17,7 +17,7 @@ public class Poller implements Runnable{
 		String connectionRetriesAllowed = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRIES_ALLOWED,
 				Constants.DEFAULT_CONNECTION_RETRIES_ALLOWED).trim();
 
-		String connectionRetryTime = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRIES_ALLOWED,
+		String connectionRetryTime = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRY_TIME,
 				Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
 		try{
 
