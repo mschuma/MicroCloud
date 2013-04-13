@@ -424,11 +424,10 @@ public class ResourceRegistration {
 	}
 
 	public static List<String> getChildren(Connection conn){
-		List<String> children = null;
+		List<String> children = new ArrayList<String>();
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		if(conn != null){
-			children = new ArrayList<String>();
 			try{
 				stmt = conn.prepareStatement(SQLQueries.SELECT_ALL_IPADDRESSES);				
 				rs = stmt.executeQuery();
