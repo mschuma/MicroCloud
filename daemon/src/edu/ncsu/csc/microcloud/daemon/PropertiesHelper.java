@@ -29,8 +29,7 @@ public class PropertiesHelper {
 		if(filename != null && !("".equals(filename.trim()))){
 			try{
 				properties = new Properties();
-                InputStream inputStream = Constants.class.getClassLoader().getResourceAsStream(filename);
-				properties.load(inputStream);
+				properties.load(new FileReader(filename));
 
 			}catch(IOException  ex){
 				System.out.println("Exception while loading the property file @ : " + CLASS_NAME);
