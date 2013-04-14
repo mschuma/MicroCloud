@@ -2,6 +2,7 @@ package edu.ncsu.csc.microcloud.daemon;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class PropertiesHelper {
@@ -27,8 +28,9 @@ public class PropertiesHelper {
 		Properties properties = null;
 		if(filename != null && !("".equals(filename.trim()))){
 			try{
-				properties = new Properties();			
-				properties.load(new FileReader(filename));		
+				properties = new Properties();
+                InputStream inputStream = Constants.class.getClassLoader().getResourceAsStream(filename);
+				properties.load(inputStream);
 
 			}catch(IOException  ex){
 				System.out.println("Exception while loading the property file @ : " + CLASS_NAME);

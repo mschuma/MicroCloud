@@ -7,17 +7,20 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Properties;
 
 import org.json.simple.JSONObject;
 
 import edu.ncsu.csc.microcloud.daemon.Constants;
 import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
+import org.json.simple.JSONValue;
 
 public class ChildDaemon {
 
     private static final String CLASS_NAME = ChildDaemon.class.getCanonicalName();
     private static long CONNECTION_RETRY_TIME;
+    private static int POLLING_PERIOD;
 
     static {
         String connectionRetryTime = PropertiesHelper.getChildProperties().getProperty(Constants.CONNECTION_RETRY_TIME,
@@ -36,12 +39,16 @@ public class ChildDaemon {
      * @param args
      */
     public static void main(String[] args) {
-        try {
-            connectToParent();
-            listenToIsAlive();
-        } catch (IOException ex) {
-            System.out.println("Exception @ : " + CLASS_NAME);
-            ex.printStackTrace();
+        while (true) {
+            try {
+                connectToParent();
+                listenToIsAlive();
+            } catch (SocketTimeoutException ex){
+                System.err.println("Parent hasn't phoned in a while, lets try reconnecting");
+            }catch (IOException ex) {
+                System.err.println("Exception @ : " + CLASS_NAME);
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -49,6 +56,7 @@ public class ChildDaemon {
         Properties properties = PropertiesHelper.getChildProperties();
         String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();
         ServerSocket listener = new ServerSocket(Integer.parseInt(child_port));
+        listener.setSoTimeout(POLLING_PERIOD * 4);
         try {
             while (true) {
                 Socket socket = null;
@@ -96,28 +104,16 @@ public class ChildDaemon {
         }
 
         System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
-        JSONObject json = new JSONObject();
-        json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_REGISTER);
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
         try {
             if (reader != null && writer != null) {
-                //send the connect message to the server
-                String message = null;
-                while ((message = reader.readLine()) != null) {
-                    if (message.equalsIgnoreCase(Constants.OK_MESSAGE)) {
-                        writer.println(json.toJSONString());
-                        break;
-                    }
+                if (readOkMessage(reader)) {
+                    writeRegisterMessage(writer);
                 }
 
-                //Wait for the server to send the ok message
-                while ((message = reader.readLine()) != null) {
-                    if (message.equalsIgnoreCase(Constants.OK_MESSAGE)) {
-                        break;
-                    }
-                }
-
+                POLLING_PERIOD = (int) readAcknowledgementAndPollingPeriod(reader);
             }
         } finally {
             reader.close();
@@ -127,4 +123,33 @@ public class ChildDaemon {
 
     }
 
+    private static boolean readOkMessage(BufferedReader reader) throws IOException {
+        String message;
+        while ((message = reader.readLine()) != null) {
+            if (message.equalsIgnoreCase(Constants.OK_MESSAGE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void writeRegisterMessage(PrintWriter writer) {
+        JSONObject json = new JSONObject();
+        json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_REGISTER);
+        writer.println(json.toJSONString());
+    }
+
+    private static long readAcknowledgementAndPollingPeriod(BufferedReader reader) throws IOException {
+        String message;
+        while ((message = reader.readLine()) != null) {
+            JSONObject json = (JSONObject) JSONValue.parse(message);
+            String msgType = (String) json.get(Constants.MSG_TYPE);
+            if (msgType.equals(Constants.MSG_TYPE_ACKNOWLEDGE)) {
+                return (Long) json.get(Constants.POLLING_PERIOD);
+            }
+        }
+        throw new IOException("Received unknow message: " + message);
+    }
 }
+
+

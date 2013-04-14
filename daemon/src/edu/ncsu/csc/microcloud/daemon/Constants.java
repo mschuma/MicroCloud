@@ -5,7 +5,10 @@ public class Constants {
 	public static final String MSG_TYPE = "msg_type";
 	public static final String MSG_TYPE_REGISTER = "register";
 	public static final String MSG_TYPE_UNREGISTER = "unregister";
+    public static final String MSG_TYPE_ACKNOWLEDGE = "acknowledge";
 	public static final String MSG_IS_ALIVE = "is_alive";
+
+
 	
 	public static final String PARENT_IP = "parent_ip";
 	public static final String PARENT_PORT = "parent_port";

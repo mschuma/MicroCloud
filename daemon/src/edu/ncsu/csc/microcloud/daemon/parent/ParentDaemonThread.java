@@ -18,10 +18,11 @@ import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 public class ParentDaemonThread implements Runnable {
 	private static final String CLASS_NAME = ParentDaemonThread.class.getCanonicalName();
 	private Socket socket;
+    private final long pollingPeriod;
 	
-	public ParentDaemonThread(Socket socket) {
-		this.socket = socket;		
-		
+	public ParentDaemonThread(Socket socket, long pollingPeriod) {
+		this.socket = socket;
+        this.pollingPeriod = pollingPeriod;
 	}
 
 	@Override
@@ -56,22 +57,6 @@ public class ParentDaemonThread implements Runnable {
 		}
 	}
 
-    private static void invokeParentScript() {
-        Properties properties = PropertiesHelper.getParentProperties();
-        String script_path = properties.getProperty(
-                                Constants.PARENT_SCRIPT_PATH,
-                                Constants.DEFAULT_PARENT_SCRIPT_PATH).trim();
-
-        try {               
-                Runtime.getRuntime().exec(
-                    new String[] { "python", script_path, "&" });
-            } catch (Exception ex) {
-                System.out.println("Unable to start parent script");
-                ex.printStackTrace();
-        }
-    }
-
-
 	private void unregisterResource() throws IOException{
 		//TODO: invoke the registration API
 		String childIP = this.socket.getInetAddress().getHostAddress();
@@ -90,7 +75,10 @@ public class ParentDaemonThread implements Runnable {
 	
 	private void acknowledge() throws IOException{
 		PrintWriter outputStream = new PrintWriter(socket.getOutputStream(), true);
-		outputStream.println(Constants.OK_MESSAGE);	
+        JSONObject json = new JSONObject();
+        json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_ACKNOWLEDGE);
+        json.put(Constants.POLLING_PERIOD, pollingPeriod );
+		outputStream.println(json.toJSONString());
 		outputStream.close();
 	}
 

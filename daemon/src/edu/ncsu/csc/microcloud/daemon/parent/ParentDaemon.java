@@ -19,19 +19,14 @@ public class ParentDaemon {
 
     static {
         //When the parent restarts, load all the children from the DB
-        Connection conn = DBHelper.getConnection();
-        if (conn != null) {
-            try {
-                List<String> resources = ResourceRegistration.getChildren(conn);
-                System.out.println("Resources at startup :: " + resources);
-                for (String child : resources) {
-                    addChild(child);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                DBHelper.closeConnection(conn);
+        try {
+            List<String> resources = ResourceRegistration.getChildren();
+            System.out.println("Resources at startup :: " + resources);
+            for (String child : resources) {
+                addChild(child);
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
     }
@@ -51,7 +46,7 @@ public class ParentDaemon {
             poller.start();
             while (true) {
                 Socket socket = listener.accept();
-                Thread t = new Thread(new ParentDaemonThread(socket));
+                Thread t = new Thread(new ParentDaemonThread(socket, pollingPeriod));
                 t.start();
             }
         } finally {

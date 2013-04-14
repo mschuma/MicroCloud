@@ -85,56 +85,56 @@ public class ResourceRegistration {
 	public static void registerResource(String resourceIP){
 		Connection conn = DBHelper.getConnection();
 		Properties properties = PropertiesHelper.getParentProperties();
-		
-		String imageGroupName = properties.getProperty(Constants.ChildImage.Key.IMAGE_GROUP_NAME, 
+
+		String imageGroupName = properties.getProperty(Constants.ChildImage.Key.IMAGE_GROUP_NAME,
 				Constants.ChildImage.DefaultValue.IMAGE_GROUP_NAME).trim();
-		
-		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME, 
+
+		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME,
 				Constants.ChildImage.DefaultValue.COMPUTER_GROUP_NAME).trim();
-		
-		String ownerName = properties.getProperty(Constants.ChildImage.Key.OWNER_NAME, 
+
+		String ownerName = properties.getProperty(Constants.ChildImage.Key.OWNER_NAME,
 												Constants.ChildImage.DefaultValue.OWNER_NAME).trim();
-		
-		String imageName = properties.getProperty(Constants.ChildImage.Key.IMAGE_NAME, 
+
+		String imageName = properties.getProperty(Constants.ChildImage.Key.IMAGE_NAME,
 				Constants.ChildImage.DefaultValue.IMAGE_NAME).trim();
-		
-		String imagePrettyName = properties.getProperty(Constants.ChildImage.Key.IMAGE_PRETTY_NAME, 
+
+		String imagePrettyName = properties.getProperty(Constants.ChildImage.Key.IMAGE_PRETTY_NAME,
 				Constants.ChildImage.DefaultValue.IMAGE_PRETTYNAME).trim();
-		
+
 		// TODO: Retrieve this information from the child
-		String platformName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_PLATFORM_NAME, 
+		String platformName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_PLATFORM_NAME,
 														Constants.ChildImage.DefaultValue.PLATFORM_NAME).trim();
-		
-		String provisioningName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROVISIONING_NAME, 
+
+		String provisioningName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROVISIONING_NAME,
 				Constants.ChildImage.DefaultValue.PROVISIONING_NAME).trim();
-		
-		String stateName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_STATE_NAME, 
+
+		String stateName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_STATE_NAME,
 				Constants.ChildImage.DefaultValue.STATE_NAME).trim();
-		
-		String scheduleName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_SCHEDULE_NAME, 
+
+		String scheduleName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_SCHEDULE_NAME,
 														Constants.ChildImage.DefaultValue.SCHEDULE_NAME).trim();
-		
-		Integer procSpeed = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROC_SPEED, 
+
+		Integer procSpeed = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROC_SPEED,
 				Constants.ChildImage.DefaultValue.PROC_SPEED).trim());
-		
-		Integer procNumber = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROC_NUMBER, 
+
+		Integer procNumber = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_PROC_NUMBER,
 				Constants.ChildImage.DefaultValue.PROC_NUMBER).trim());
-		
-		Integer ram = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_RAM, 
+
+		Integer ram = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_RAM,
 				Constants.ChildImage.DefaultValue.RAM).trim());
-		
-		Integer networkSpeed = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_NETWORK, 
+
+		Integer networkSpeed = Integer.parseInt(properties.getProperty(Constants.ChildImage.Key.DEFAULT_NETWORK,
 				Constants.ChildImage.DefaultValue.NETWORK).trim());
-		
-		String computerType = properties.getProperty(Constants.ChildImage.Key.DEFAULT_COMPUTER_TYPE, 
+
+		String computerType = properties.getProperty(Constants.ChildImage.Key.DEFAULT_COMPUTER_TYPE,
 				Constants.ChildImage.DefaultValue.COMPUTER_TYPE).trim();
-		
-		String computerDriveType = properties.getProperty(Constants.ChildImage.Key.DEFAULT_COMPUTER_DRIVE_TYPE, 
+
+		String computerDriveType = properties.getProperty(Constants.ChildImage.Key.DEFAULT_COMPUTER_DRIVE_TYPE,
 				Constants.ChildImage.DefaultValue.COMPUTER_DRIVE_TYPE).trim();
-		
-		String location = properties.getProperty(Constants.ChildImage.Key.DEFAULT_LOCATION, 
+
+		String location = properties.getProperty(Constants.ChildImage.Key.DEFAULT_LOCATION,
 				Constants.ChildImage.DefaultValue.LOCATION).trim();
-		
+
 		try{
 			conn.setAutoCommit(false);
 			//check if resource is already registered
@@ -145,43 +145,43 @@ public class ResourceRegistration {
 				computer.ownerId = selectIdFromTable(conn, SQLQueries.SelectId.USER, ownerName);
 				computer.platformId = selectIdFromTable(conn, SQLQueries.SelectId.PLATFORM, platformName);
 				computer.scheduleId = selectIdFromTable(conn, SQLQueries.SelectId.SCHEDULE, scheduleName);
-				
+
 				Integer imageId = selectIdFromTable(conn, SQLQueries.SelectId.IMAGE, imageName);
 				computer.currentImageId = imageId;
 				computer.nextImageId = imageId;
-				computer.imageRevisionId = imageId;			
-				
+				computer.imageRevisionId = imageId;
+
 				computer.RAM = ram;
 				computer.procNumber = procNumber;
 				computer.procSpeed = procSpeed;
 				computer.networkSpeed = networkSpeed;
-				
+
 				// TODO: Retrieve from child
 				computer.hostName = resourceIP;
 				computer.IPAddress = resourceIP;
 				computer.privateIPAddress = "";
 				computer.eth0MACAddress = resourceIP;
 				computer.eth1MACAddress = resourceIP;
-				
+
 				computer.type = computerType;
 				computer.provisioningId = selectIdFromTable(conn, SQLQueries.SelectId.PROVISIONING, provisioningName);
 				computer.driveType = computerDriveType;
 
 				// TODO: Remove hard coding
-				computer.deleted = 0;					
+				computer.deleted = 0;
 				//computer.dateDeleted = DateFormat.getInstance().parse("0000-00-00 00:00:00");
-				
+
 				computer.location = location;
-				
+
 				insertIntoComputer(conn, computer);
 				computerId = selectIdFromComputer(conn, resourceIP);
-				
-				int resourceTypeId = selectIdFromTable(conn, SQLQueries.SelectId.RESOURCE_TYPE, "computer");				
-				insertIntoResource(conn, resourceTypeId, computerId);				
-				
+
+				int resourceTypeId = selectIdFromTable(conn, SQLQueries.SelectId.RESOURCE_TYPE, "computer");
+				insertIntoResource(conn, resourceTypeId, computerId);
+
 				int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);
 				int resourceGroupId = selectIdFromResourceGroup(conn, computerGroupName, resourceTypeId);
-						
+
 				insertIntoResourceGroupMembers(conn, resourceId, resourceGroupId);
 				conn.commit();
 			}else{
@@ -353,20 +353,20 @@ public class ResourceRegistration {
 
 	public static void unregisterResource(String resourceIP){
 		Connection conn = DBHelper.getConnection();
-		Properties properties = PropertiesHelper.getParentProperties();		
-		
-		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME, 
+		Properties properties = PropertiesHelper.getParentProperties();
+
+		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME,
 				Constants.ChildImage.DefaultValue.COMPUTER_GROUP_NAME).trim();
-		
+
 		try{
 			conn.setAutoCommit(false);
 			int computerId = selectIdFromComputer(conn, resourceIP);
-			
+
 			int resourceTypeId = selectIdFromTable(conn, SQLQueries.SelectId.RESOURCE_TYPE, "computer");
 			int resourceId = selectIdFromResource(conn, resourceTypeId, computerId);
-			
+
 			int resourceGroupId = selectIdFromResourceGroup(conn, computerGroupName, resourceTypeId);
-			
+
 			deleteFromResourceGroupMembers(conn, resourceId, resourceGroupId);
 			deleteFromResource(conn, resourceId);
 			deleteFromComputer(conn, resourceIP);
@@ -423,25 +423,27 @@ public class ResourceRegistration {
 		}
 	}
 
-	public static List<String> getChildren(Connection conn){
+	public static List<String> getChildren(){
 		List<String> children = new ArrayList<String>();
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		if(conn != null){
-			try{
-				stmt = conn.prepareStatement(SQLQueries.SELECT_ALL_IPADDRESSES);				
-				rs = stmt.executeQuery();
-				while(rs.next()){
-					children.add(rs.getString(1));
-				}
-			}catch(SQLException sqlex){
-				sqlex.printStackTrace();
-			}finally{
-				DBHelper.closeStatement(stmt);
-				DBHelper.closeResultSet(rs);
-			}
-		}
-		return children;
+        Connection conn = DBHelper.getConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        if (conn != null) {
+            try {
+                stmt = conn.prepareStatement(SQLQueries.SELECT_ALL_IPADDRESSES);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    children.add(rs.getString(1));
+                }
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+            } finally {
+                DBHelper.closeStatement(stmt);
+                DBHelper.closeResultSet(rs);
+                DBHelper.closeConnection(conn);
+            }
+        }
+        return children;
 	}
 
 }
