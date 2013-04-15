@@ -1,8 +1,9 @@
 package edu.ncsu.csc.microcloud.daemon.parent;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,17 +36,18 @@ public class ParentDaemon {
      * @param args
      */
     public static void main(String[] args) throws IOException {
-        ServerSocket listener = null;
+        SSLServerSocket listener = null;
         try {
             Properties properties = PropertiesHelper.getParentProperties();
-            listener = new ServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
+            SSLServerSocketFactory sslserversocketfactory =(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+			listener = (SSLServerSocket)sslserversocketfactory.createServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
             System.out.println("Waiting for connections");
             long pollingPeriod = Long.parseLong(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
             int childPort = Integer.parseInt(properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim());
             Thread poller = new Thread(new Poller(pollingPeriod, childPort));
             poller.start();
             while (true) {
-                Socket socket = listener.accept();
+                SSLSocket socket = (SSLSocket)listener.accept();
                 Thread t = new Thread(new ParentDaemonThread(socket, pollingPeriod));
                 t.start();
             }

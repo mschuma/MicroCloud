@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.Socket;
+import javax.net.ssl.SSLSocket;
 import java.util.Properties;
 
 import org.json.simple.JSONObject;
@@ -17,10 +17,10 @@ import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 
 public class ParentDaemonThread implements Runnable {
 	private static final String CLASS_NAME = ParentDaemonThread.class.getCanonicalName();
-	private Socket socket;
+	private SSLSocket socket;
     private final long pollingPeriod;
 	
-	public ParentDaemonThread(Socket socket, long pollingPeriod) {
+	public ParentDaemonThread(SSLSocket socket, long pollingPeriod) {
 		this.socket = socket;
         this.pollingPeriod = pollingPeriod;
 	}

@@ -1,8 +1,8 @@
 package edu.ncsu.csc.microcloud.daemon.parent;
 
 import java.io.IOException;
-import java.net.Socket;
-
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLSocket;
 import edu.ncsu.csc.microcloud.daemon.Constants;
 import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
@@ -13,11 +13,9 @@ public class ChildHealthCheck implements Runnable{
 	private static int CONNECTION_RETRIES_ALLOWED;
 
 	static{
-		String connectionRetriesAllowed = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRIES_ALLOWED,
-				Constants.DEFAULT_CONNECTION_RETRIES_ALLOWED).trim();
+		String connectionRetriesAllowed = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRIES_ALLOWED,Constants.DEFAULT_CONNECTION_RETRIES_ALLOWED).trim();
 
-		String connectionRetryTime = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRY_TIME,
-				Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
+		String connectionRetryTime = PropertiesHelper.getParentProperties().getProperty(Constants.CONNECTION_RETRY_TIME,Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
 		try{
 
 			CONNECTION_RETRIES_ALLOWED = Integer.parseInt(connectionRetriesAllowed);
@@ -51,11 +49,12 @@ public class ChildHealthCheck implements Runnable{
 	public void run(){
 		int attemptId = 1;
 		boolean connected = false;
-		Socket childSocket = null;
+		SSLSocket childSocket = null;
 		try{
 			while(!connected && attemptId <= CONNECTION_RETRIES_ALLOWED){
 				try{
-					childSocket = new Socket(this.child, this.childPort);
+					SSLSocketFactory f =  (SSLSocketFactory) SSLSocketFactory.getDefault();
+					childSocket = (SSLSocket) f.createSocket(this.child, this.childPort);
 					connected = true;
 					System.out.println("Child " + this.child + " is still alive");
 				}catch(Exception ex){

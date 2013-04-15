@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLSocket;
 import java.net.SocketTimeoutException;
 import java.util.Properties;
 
@@ -54,14 +56,15 @@ public class ChildDaemon {
 
     private static void listenToIsAlive() throws IOException {
         Properties properties = PropertiesHelper.getChildProperties();
+	SSLServerSocketFactory sslserversocketfactory =(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();
-        ServerSocket listener = new ServerSocket(Integer.parseInt(child_port));
+        SSLServerSocket listener = (SSLServerSocket)sslserversocketfactory.createServerSocket(Integer.parseInt(child_port));
         listener.setSoTimeout(POLLING_PERIOD * 4);
         try {
             while (true) {
-                Socket socket = null;
+                SSLSocket socket = null;
                 try {
-                    socket = listener.accept();
+                    socket = (SSLSocket)listener.accept();	
                 } finally {
                     if (socket != null) {
                         socket.close();
@@ -83,12 +86,16 @@ public class ChildDaemon {
 
         boolean connected = false;
         int connectionAttempt = 1;
-        Socket client = null;
+	
+        SSLSocket client = null;
+	SSLSocketFactory f = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
         while (!connected) {
             try {
-                client = new Socket(parent_ip, Integer.parseInt(parent_port));
+		
+                client = (SSLSocket) f.createSocket(parent_ip, Integer.parseInt(parent_port));
                 connected = true;
+		
             } catch (Exception ex) {
                 System.out.println("Attempt :: " + connectionAttempt + " => Unable to connect to the parent");
                 ex.printStackTrace();
@@ -102,24 +109,29 @@ public class ChildDaemon {
             }
 
         }
-
-        System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
+	System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
-        try {
+      try {  
+	
+
             if (reader != null && writer != null) {
                 if (readOkMessage(reader)) {
                     writeRegisterMessage(writer);
                 }
 
                 POLLING_PERIOD = (int) readAcknowledgementAndPollingPeriod(reader);
-            }
+		
+                }
+	
+            
         } finally {
             reader.close();
             writer.close();
             client.close();
         }
+        
 
     }
 
@@ -140,16 +152,21 @@ public class ChildDaemon {
     }
 
     private static long readAcknowledgementAndPollingPeriod(BufferedReader reader) throws IOException {
-        String message;
-        while ((message = reader.readLine()) != null) {
+        String message = "";
+	
+        while (reader!=null && (message = reader.readLine()) != null) {
             JSONObject json = (JSONObject) JSONValue.parse(message);
-            String msgType = (String) json.get(Constants.MSG_TYPE);
-            if (msgType.equals(Constants.MSG_TYPE_ACKNOWLEDGE)) {
-                return (Long) json.get(Constants.POLLING_PERIOD);
-            }
+	  
+	            String msgType = (String) json.get(Constants.MSG_TYPE);
+				    
+        	    if (msgType.equals(Constants.MSG_TYPE_ACKNOWLEDGE)) {
+        	        return (Long) json.get(Constants.POLLING_PERIOD);
+        	    }
+	    
         }
+
         throw new IOException("Received unknow message: " + message);
     }
-}
 
+}
 
