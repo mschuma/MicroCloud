@@ -10,10 +10,10 @@ public class Poller implements Runnable{
 	private long pollingPeriod;
 	private int childPort;
     private Executor executor;
+    private final int IDLE_THREAD_PERIOD=5;
 
-
-	public Poller(long pollingPeriod, int childPort) {
-        executor = new ThreadPoolExecutor(2,2,5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+	public Poller(long pollingPeriod, int childPort,int pollingThreads) {
+        executor = new ThreadPoolExecutor(pollingThreads, pollingThreads, IDLE_THREAD_PERIOD, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		this.pollingPeriod = pollingPeriod;
 		this.childPort = childPort;		
 	}

@@ -42,9 +42,10 @@ public class ParentDaemon {
             SSLServerSocketFactory sslserversocketfactory =(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
 			listener = (SSLServerSocket)sslserversocketfactory.createServerSocket(Integer.parseInt(properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT)));
             System.out.println("Waiting for connections");
+            int pollingThreads = Integer.parseInt(properties.getProperty(Constants.POLLING_THREADS, Constants.DEFAULT_POLLING_THREADS).trim());
             long pollingPeriod = Long.parseLong(properties.getProperty(Constants.POLLING_PERIOD, Constants.DEFAULT_POLLING_PERIOD).trim());
             int childPort = Integer.parseInt(properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim());
-            Thread poller = new Thread(new Poller(pollingPeriod, childPort));
+            Thread poller = new Thread(new Poller(pollingPeriod, childPort, pollingThreads));
             poller.start();
             while (true) {
                 SSLSocket socket = (SSLSocket)listener.accept();

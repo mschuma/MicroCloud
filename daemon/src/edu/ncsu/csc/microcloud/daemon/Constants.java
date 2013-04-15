@@ -16,6 +16,7 @@ public class Constants {
 	public static final String CONNECTION_RETRY_TIME = "connection_retry_time";
 	public static final String CONNECTION_RETRIES_ALLOWED = "connection_retries_allowed";
 	public static final String POLLING_PERIOD = "polling_period";
+    public static final String POLLING_THREADS = "polling_threads";
 	public static final String DB_HOSTNAME = "db_hostname";
 	public static final String DB_NAME = "db_name";
 	public static final String DB_USERNAME = "db_username";
@@ -26,6 +27,7 @@ public class Constants {
 	public static final String DEFAULT_PARENT_PORT = "9000";
 	public static final String DEFAULT_CHILD_PORT = "9090";
 	public static final String DEFAULT_POLLING_PERIOD = "300000";
+    public static final String DEFAULT_POLLING_THREADS = "2";
 	public static final String DEFAULT_CONNECTION_RETRIES_ALLOWED = "10";
 	public static final String DEFAULT_CONNECTION_RETRY_TIME = "60000";
 
