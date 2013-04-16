@@ -47,6 +47,7 @@ public class ChildHealthCheck implements Runnable{
 
 	@Override
 	public void run(){
+        long startTime = System.currentTimeMillis();
 		int attemptId = 1;
 		boolean connected = false;
 		SSLSocket childSocket = null;
@@ -85,6 +86,8 @@ public class ChildHealthCheck implements Runnable{
 				}
 			}
 		}
+        long endTime = System.currentTimeMillis();
+        System.out.println("Timing: "+(endTime-startTime));
 	}
 
 }
