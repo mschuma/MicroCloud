@@ -72,9 +72,9 @@ public class ChildHealthCheck implements Runnable{
 			if(!connected){
 				//unregister the child
 				System.out.println("Child " + child + "is dead. Deregistering....");
-				ParentDaemon.removeChild(child);
 				ResourceRegistration.unregisterResource(child);
-			}
+                ParentDaemon.removeChild(child);
+            }
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}finally{
