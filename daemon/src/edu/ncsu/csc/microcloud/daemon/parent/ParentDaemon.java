@@ -4,13 +4,11 @@ import java.io.IOException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import edu.ncsu.csc.microcloud.daemon.Constants;
-import edu.ncsu.csc.microcloud.daemon.DBHelper;
 import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
 
@@ -49,7 +47,7 @@ public class ParentDaemon {
             poller.start();
             while (true) {
                 SSLSocket socket = (SSLSocket)listener.accept();
-                Thread t = new Thread(new ParentDaemonThread(socket, pollingPeriod));
+                Thread t = new Thread(new ChildRegistrationThread(socket, pollingPeriod));
                 t.start();
             }
         } finally {
