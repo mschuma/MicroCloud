@@ -27,9 +27,10 @@ public class Poller implements Runnable {
     }
 
     public void run() {
+        long sleepingPeriod = pollingPeriod;
         while (true) {
             try {
-                Thread.sleep(this.pollingPeriod);
+                Thread.sleep(sleepingPeriod);
             } catch (Exception ex) {
                 System.err.println("Error caught while sleeping in Poller");
                 ex.printStackTrace();
@@ -37,9 +38,17 @@ public class Poller implements Runnable {
 
             try {
                 lock.lock();
+                long startTime = System.currentTimeMillis();
                 executeChildren();
                 executeFinishedRun();
                 executionsFinished.await();
+                long finishTime = System.currentTimeMillis();
+                long elapsedTime = finishTime-startTime;
+                sleepingPeriod = pollingPeriod - elapsedTime;
+                System.out.println("Polling cycle took (ms)::"+elapsedTime);
+                if (elapsedTime > pollingPeriod) {
+                    System.err.println("WARNING! Polling cycle took longer than specified, children may start to think parent is missing");
+                }
             } catch (Exception ex) {
                 System.err.println("Error caught executing children in Poller");
                 ex.printStackTrace();
