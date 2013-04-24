@@ -13,7 +13,6 @@ import edu.ncsu.csc.microcloud.daemon.PropertiesHelper;
 import edu.ncsu.csc.microcloud.daemon.ResourceRegistration;
 
 public class ParentDaemon {
-    private static final String CLASS_NAME = ParentDaemon.class.getCanonicalName();
     private final static List<String> children = new ArrayList<String>();
 
     static {

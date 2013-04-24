@@ -86,9 +86,6 @@ public class ResourceRegistration {
 		Connection conn = DBHelper.getConnection();
 		Properties properties = PropertiesHelper.getParentProperties();
 
-		String imageGroupName = properties.getProperty(Constants.ChildImage.Key.IMAGE_GROUP_NAME,
-				Constants.ChildImage.DefaultValue.IMAGE_GROUP_NAME).trim();
-
 		String computerGroupName = properties.getProperty(Constants.ChildImage.Key.COMPUTER_GROUP_NAME,
 				Constants.ChildImage.DefaultValue.COMPUTER_GROUP_NAME).trim();
 
@@ -97,9 +94,6 @@ public class ResourceRegistration {
 
 		String imageName = properties.getProperty(Constants.ChildImage.Key.IMAGE_NAME,
 				Constants.ChildImage.DefaultValue.IMAGE_NAME).trim();
-
-		String imagePrettyName = properties.getProperty(Constants.ChildImage.Key.IMAGE_PRETTY_NAME,
-				Constants.ChildImage.DefaultValue.IMAGE_PRETTYNAME).trim();
 
 		// TODO: Retrieve this information from the child
 		String platformName = properties.getProperty(Constants.ChildImage.Key.DEFAULT_PLATFORM_NAME,
