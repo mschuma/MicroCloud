@@ -20,153 +20,165 @@ import org.json.simple.JSONValue;
 
 public class ChildDaemon {
 
-    private static final String CLASS_NAME = ChildDaemon.class.getCanonicalName();
-    private static long CONNECTION_RETRY_TIME;
-    private static int POLLING_PERIOD;
+	private static final String CLASS_NAME = ChildDaemon.class
+			.getCanonicalName();
+	private static long CONNECTION_RETRY_TIME;
+	private static int POLLING_PERIOD;
 
-    static {
-        String connectionRetryTime = PropertiesHelper.getChildProperties().getProperty(Constants.CONNECTION_RETRY_TIME,
-                Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
-        try {
-            CONNECTION_RETRY_TIME = Long.parseLong(connectionRetryTime);
-        } catch (NumberFormatException ex) {
-            System.out.println("number format exception for the property :: " + Constants.CONNECTION_RETRY_TIME);
-            System.out.println("Its value is :: " + connectionRetryTime);
-            ex.printStackTrace();
-            System.exit(-1);
-        }
-    }
+	static {
+		String connectionRetryTime = PropertiesHelper
+				.getChildProperties()
+				.getProperty(Constants.CONNECTION_RETRY_TIME,
+						Constants.DEFAULT_CONNECTION_RETRY_TIME).trim();
+		try {
+			CONNECTION_RETRY_TIME = Long.parseLong(connectionRetryTime);
+		} catch (NumberFormatException ex) {
+			System.out.println("number format exception for the property :: "
+					+ Constants.CONNECTION_RETRY_TIME);
+			System.out.println("Its value is :: " + connectionRetryTime);
+			ex.printStackTrace();
+			System.exit(-1);
+		}
+	}
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        while (true) {
-            try {
-                connectToParent();
-                listenToIsAlive();
-            } catch (SocketTimeoutException ex){
-                System.err.println("Parent hasn't phoned in a while, lets try reconnecting");
-            }catch (IOException ex) {
-                System.err.println("Exception @ : " + CLASS_NAME);
-                ex.printStackTrace();
-            }
-        }
-    }
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		while (true) {
+			try {
+				connectToParent();
+				listenToIsAlive();
+			} catch (SocketTimeoutException ex) {
+				System.err
+						.println("Parent hasn't phoned in a while, lets try reconnecting");
+			} catch (IOException ex) {
+				System.err.println("Exception @ : " + CLASS_NAME);
+				ex.printStackTrace();
+			}
+		}
+	}
 
-    private static void listenToIsAlive() throws IOException {
-        Properties properties = PropertiesHelper.getChildProperties();
-	SSLServerSocketFactory sslserversocketfactory =(SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        String child_port = properties.getProperty(Constants.CHILD_PORT, Constants.DEFAULT_CHILD_PORT).trim();
-        SSLServerSocket listener = (SSLServerSocket)sslserversocketfactory.createServerSocket(Integer.parseInt(child_port));
-        listener.setSoTimeout(POLLING_PERIOD * 4);
-        try {
-            while (true) {
-                SSLSocket socket = null;
-                try {
-                    socket = (SSLSocket)listener.accept();	
-                } finally {
-                    if (socket != null) {
-                        socket.close();
-                    }
-                }
-            }
-        } finally {
-            listener.close();
-        }
-    }
+	private static void listenToIsAlive() throws IOException {
+		Properties properties = PropertiesHelper.getChildProperties();
+		SSLServerSocketFactory sslserversocketfactory = (SSLServerSocketFactory) SSLServerSocketFactory
+				.getDefault();
+		String child_port = properties.getProperty(Constants.CHILD_PORT,
+				Constants.DEFAULT_CHILD_PORT).trim();
+		SSLServerSocket listener = (SSLServerSocket) sslserversocketfactory
+				.createServerSocket(Integer.parseInt(child_port));
+		listener.setSoTimeout(POLLING_PERIOD * 4);
+		try {
+			while (true) {
+				SSLSocket socket = null;
+				try {
+					socket = (SSLSocket) listener.accept();
+				} finally {
+					if (socket != null) {
+						socket.close();
+					}
+				}
+			}
+		} finally {
+			listener.close();
+		}
+	}
 
-    private static void connectToParent() throws IOException {
-        Properties properties = PropertiesHelper.getChildProperties();
-        String parent_ip = properties.getProperty(Constants.PARENT_IP, Constants.DEFAULT_PARENT_IP).trim();
-        String parent_port = properties.getProperty(Constants.PARENT_PORT, Constants.DEFAULT_PARENT_PORT).trim();
+	private static void connectToParent() throws IOException {
+		Properties properties = PropertiesHelper.getChildProperties();
+		String parent_ip = properties.getProperty(Constants.PARENT_IP,
+				Constants.DEFAULT_PARENT_IP).trim();
+		String parent_port = properties.getProperty(Constants.PARENT_PORT,
+				Constants.DEFAULT_PARENT_PORT).trim();
 
-        System.out.println("Parent IP :: " + parent_ip);
-        System.out.println("Parent port :: " + parent_port);
+		System.out.println("Parent IP :: " + parent_ip);
+		System.out.println("Parent port :: " + parent_port);
 
-        boolean connected = false;
-        int connectionAttempt = 1;
-	
-        SSLSocket client = null;
-	SSLSocketFactory f = (SSLSocketFactory) SSLSocketFactory.getDefault();
+		boolean connected = false;
+		int connectionAttempt = 1;
 
-        while (!connected) {
-            try {
-		
-                client = (SSLSocket) f.createSocket(parent_ip, Integer.parseInt(parent_port));
-                connected = true;
-		
-            } catch (Exception ex) {
-                System.out.println("Attempt :: " + connectionAttempt + " => Unable to connect to the parent");
-                ex.printStackTrace();
-                try {
-                    Thread.sleep(CONNECTION_RETRY_TIME);
-                } catch (InterruptedException iex) {
-                    System.out.println("Exception while child thread sleeps");
-                    iex.printStackTrace();
-                }
-                connectionAttempt++;
-            }
+		SSLSocket client = null;
+		SSLSocketFactory f = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-        }
-	System.out.println("Attempt :: " + connectionAttempt + " => Successfully connected to the parent");
+		while (!connected) {
+			try {
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
-      try {  
-	
+				client = (SSLSocket) f.createSocket(parent_ip,
+						Integer.parseInt(parent_port));
+				connected = true;
 
-            if (reader != null && writer != null) {
-                if (readOkMessage(reader)) {
-                    writeRegisterMessage(writer);
-                }
+			} catch (Exception ex) {
+				System.out.println("Attempt :: " + connectionAttempt
+						+ " => Unable to connect to the parent");
+				ex.printStackTrace();
+				try {
+					Thread.sleep(CONNECTION_RETRY_TIME);
+				} catch (InterruptedException iex) {
+					System.out.println("Exception while child thread sleeps");
+					iex.printStackTrace();
+				}
+				connectionAttempt++;
+			}
 
-                POLLING_PERIOD = (int) readAcknowledgementAndPollingPeriod(reader);
-		
-                }
-	
-            
-        } finally {
-            reader.close();
-            writer.close();
-            client.close();
-        }
-        
+		}
+		System.out.println("Attempt :: " + connectionAttempt
+				+ " => Successfully connected to the parent");
 
-    }
+		BufferedReader reader = new BufferedReader(new InputStreamReader(
+				client.getInputStream()));
+		PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+				client.getOutputStream()), true);
+		try {
 
-    private static boolean readOkMessage(BufferedReader reader) throws IOException {
-        String message;
-        while ((message = reader.readLine()) != null) {
-            if (message.equalsIgnoreCase(Constants.OK_MESSAGE)) {
-                return true;
-            }
-        }
-        return false;
-    }
+			if (reader != null && writer != null) {
+				if (readOkMessage(reader)) {
+					writeRegisterMessage(writer);
+				}
 
-    private static void writeRegisterMessage(PrintWriter writer) {
-        JSONObject json = new JSONObject();
-        json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_REGISTER);
-        writer.println(json.toJSONString());
-    }
+				POLLING_PERIOD = (int) readAcknowledgementAndPollingPeriod(reader);
 
-    private static long readAcknowledgementAndPollingPeriod(BufferedReader reader) throws IOException {
-        String message = "";
-	
-        while (reader!=null && (message = reader.readLine()) != null) {
-            JSONObject json = (JSONObject) JSONValue.parse(message);
-	  
-	            String msgType = (String) json.get(Constants.MSG_TYPE);
-				    
-        	    if (msgType.equals(Constants.MSG_TYPE_ACKNOWLEDGE)) {
-        	        return (Long) json.get(Constants.POLLING_PERIOD);
-        	    }
-	    
-        }
+			}
 
-        throw new IOException("Received unknow message: " + message);
-    }
+		} finally {
+			reader.close();
+			writer.close();
+			client.close();
+		}
+
+	}
+
+	private static boolean readOkMessage(BufferedReader reader)
+			throws IOException {
+		String message;
+		while ((message = reader.readLine()) != null) {
+			if (message.equalsIgnoreCase(Constants.OK_MESSAGE)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void writeRegisterMessage(PrintWriter writer) {
+		JSONObject json = new JSONObject();
+		json.put(Constants.MSG_TYPE, Constants.MSG_TYPE_REGISTER);
+		writer.println(json.toJSONString());
+	}
+
+	private static long readAcknowledgementAndPollingPeriod(
+			BufferedReader reader) throws IOException {
+		String message = "";
+
+		while (reader != null && (message = reader.readLine()) != null) {
+			JSONObject json = (JSONObject) JSONValue.parse(message);
+
+			String msgType = (String) json.get(Constants.MSG_TYPE);
+
+			if (msgType.equals(Constants.MSG_TYPE_ACKNOWLEDGE)) {
+				return (Long) json.get(Constants.POLLING_PERIOD);
+			}
+		}
+
+		throw new IOException("Received unknow message: " + message);
+	}
 
 }
-
